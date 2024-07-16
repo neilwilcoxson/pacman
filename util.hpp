@@ -110,12 +110,12 @@ const std::vector<std::vector<std::string>> NUMERAL_DIGITS =
     {
         "  xxxxxxxx  ",
         " xxxxxxxxxx ",
-        "xx      xxx ",
+        "x       xxx ",
         "        xxxx",
         "  xxxxxxxxxx",
         " xxxxxxxxxxx",
         "        xxxx",
-        "xx      xxx ",
+        "x       xxx ",
         " xxxxxxxxxx ",
         "  xxxxxxxx  "
     },

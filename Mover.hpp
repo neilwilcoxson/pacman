@@ -12,13 +12,15 @@ class Mover
 public:
     Mover(GameState& gameState, int startRow, int startCol, Direction startFacing);
     virtual void update() = 0;
-    virtual void handleWall() = 0;
-    virtual void handleArrival() {};
     virtual void reset() = 0;
     void changeDirection(Direction newDirection);
-    void handleMovement();
     bool hasSamePositionAs(const Mover& otherMover) const;
     void relocate(int row, int col);
+protected:
+    virtual void handleArrival() {};
+    virtual void handleWall() = 0;
+    void handleMovement();
+
 protected:
     int m_row;
     int m_col;
@@ -37,9 +39,11 @@ class Pacman : public Mover
 public:
     Pacman(GameState& gameState);
     void update() override;
-    void handleWall() override;
-    void handleArrival() override;
     void reset() override;
+protected:
+    void handleArrival() override;
+    void handleWall() override;
+
 private:
     static inline const int PACMAN_START_ROW = 23;
     static inline const int PACMAN_START_COL = 14;
@@ -48,20 +52,25 @@ private:
     static inline const int RADIUS = 10;
 
     friend class GameState;
+    friend class Ghost;
 };
 
 class Ghost : public Mover
 {
 public:
     static std::vector<Ghost> makeGhosts(GameState& gameState);
-    static void resetGhosts(std::vector<Ghost>& ghosts);
+
     Ghost(GameState& gameState, int startRow, int startCol, Direction startFacing, const SDL_Color& color, const std::string& name);
     void update() override;
-    void handleWall() override;
     void reset() override;
+protected:
+    void handleArrival() override;
+    void handleWall() override;
+
 public:
-    bool inBox = true;
+    bool m_inBox = true;
     bool m_isFlashing = false;
+
 private:
     static inline const int NUM_GHOSTS = 4;
     static inline const int GHOST_START_ROW = 15;

@@ -186,26 +186,92 @@ void Ghost::update()
         color = FLASH_COLOR[m_flashColorIndex];
     }
 
-    SDL_Rect rect;
-    rect.h = 20;
-    rect.w = 20;
-    rect.x = X_CENTER(m_col) + m_xPixelOffset;
-    rect.y = Y_CENTER(m_row) + m_yPixelOffset;
+    // TODO store ghost in full res instead of scaling
+    const std::vector<std::string> GHOST_GRID =
+    {
+        "    xx    ",
+        "  xxxxxx  ",
+        " xx xx xx ",
+        " xxxxxxxx ",
+        " xxxxxxxx ",
+        " xxxxxxxx ",
+        " xxxxxxxx ",
+        " x  x x x "   
+    };
+
+    const int SCALING_FACTOR = 3;
+    std::vector<std::string> scaledGhost;
+
+    for (const auto& line : GHOST_GRID)
+    {
+        std::string newString;
+        for (const auto& c : line)
+        {
+            for (int i = 0; i < SCALING_FACTOR; i++)
+            {
+                newString += c;
+            }
+        }
+
+        for (int i = 0; i < SCALING_FACTOR; i++)
+        {
+            scaledGhost.push_back(newString);
+        }
+    }
 
     SDL_SetRenderDrawColor(m_gameState.m_renderer, color.r, color.g, color.b, color.a);
-    SDL_RenderFillRect(m_gameState.m_renderer, &rect);
+
+    for(int row = 0; row < scaledGhost.size(); row++)
+    {
+        for(int col = 0; col < scaledGhost[0].size(); col++)
+        {
+            if(scaledGhost[row][col] == 'x')
+            {
+                SDL_RenderDrawPoint(
+                    m_gameState.m_renderer,
+                    X_CENTER(m_col) + m_xPixelOffset + col - scaledGhost.size() / 2,
+                    Y_CENTER(m_row) + m_yPixelOffset + row - scaledGhost.size() / 2);
+            }
+        }
+    }
 }
 
 void Ghost::handleWall()
 {
     LOG_TRACE("%s hits wall", m_name.c_str());
-    // TODO ghosts always get stuck in the corner, add more logic here
     m_pendingDirection = (Direction)(((size_t)m_facingDirection + 1) % (size_t)Direction::MAX);
+}
+
+void Ghost::handleArrival()
+{
+    auto directionValid = [this](Direction direction)
+    {
+        return m_gameState.m_board[m_row + Y_INCREMENT[(size_t)direction]][m_col + X_INCREMENT[(size_t)direction]] != BOUNDARY;
+    };
+
+    Direction newDirection = m_facingDirection;
+
+    if(directionValid(Direction::UP) && m_gameState.m_pacman.m_row < m_row)
+    {
+        m_facingDirection = Direction::UP;
+    }
+    else if(directionValid(Direction::DOWN) && m_gameState.m_pacman.m_row > m_row)
+    {
+        m_facingDirection = Direction::DOWN;
+    }
+    else if(directionValid(Direction::LEFT) && m_gameState.m_pacman.m_col < m_col)
+    {
+        m_facingDirection = Direction::LEFT;
+    }
+    else if(directionValid(Direction::RIGHT) && m_gameState.m_pacman.m_col > m_col)
+    {
+        m_facingDirection = Direction::RIGHT;
+    }
 }
 
 void Ghost::reset()
 {
     relocate(GHOST_START_ROW, GHOST_START_COL + m_index);
-    inBox = true;
+    m_inBox = true;
     m_isFlashing = false;
 }

@@ -32,12 +32,12 @@ void GameState::draw()
     {
         for (auto& ghost : m_ghosts)
         {
-            if (ghost.inBox)
+            if (ghost.m_inBox)
             {
                 const int GHOST_SPAWN_ROW = 11;
                 const int GHOST_SPAWN_COL = 15;
                 ghost.relocate(GHOST_SPAWN_ROW, GHOST_SPAWN_COL);
-                ghost.inBox = false;
+                ghost.m_inBox = false;
                 m_nextGhostTicks = currentTicks + m_ghostSpwanIntervalTicks;
                 break;
             }
