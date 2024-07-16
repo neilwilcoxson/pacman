@@ -20,6 +20,9 @@ public:
     bool gameOver();
     void handlePacmanArrival();
 private:
+    void drawScore();
+    void drawFullBoard();
+private:
     BoardLayout m_board = BASE_LAYOUT;
     Pacman m_pacman { *this };
     std::vector<Ghost> m_ghosts = Ghost::makeGhosts(*this);
@@ -44,5 +47,3 @@ private:
     friend class Pacman;
     friend class Ghost;
 };
-
-void drawFullBoard(SDL_Renderer* renderer, BoardLayout& board);

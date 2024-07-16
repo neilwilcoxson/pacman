@@ -22,7 +22,8 @@ void GameState::draw()
     SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 0xff);
     SDL_RenderClear(m_renderer);
 
-    drawFullBoard(m_renderer, m_board);
+    drawScore();
+    drawFullBoard();
 
     m_pacman.update();
 
@@ -140,46 +141,75 @@ void GameState::handlePacmanArrival()
     LOG_INFO("Score: %llu", m_score);
 }
 
-void drawFullBoard(SDL_Renderer* renderer, BoardLayout& board)
+void GameState::drawScore()
 {
-    SDL_SetRenderDrawColor(renderer, 0xff, 0xff, 0xff, SDL_ALPHA_OPAQUE);
-    for (size_t row = 0; row < board.size(); row++)
+    static const int SCOREBOARD_RIGHT_EDGE_X = 300;
+    static const int SCOREBOARD_TOP_EDGE_Y = 10;
+    static const int DIGIT_WIDTH = NUMERAL_DIGITS[0][0].length();
+    static const int DIGIT_HEIGHT = NUMERAL_DIGITS[0].size();
+    static const SDL_Color COLOR = COLOR_WHITE;
+
+    SDL_SetRenderDrawColor(m_renderer, COLOR.r, COLOR.g, COLOR.b, COLOR.a);
+
+    int currentRightEdgeX = SCOREBOARD_RIGHT_EDGE_X;
+
+    for(int remainingScore = m_score; remainingScore != 0; remainingScore /= 10)
     {
-        for (size_t col = 0; col < board[row].size(); col++)
+        const auto& digitGrid = NUMERAL_DIGITS[remainingScore % 10];
+        for(int lineNumber = 0; lineNumber < DIGIT_HEIGHT; lineNumber++)
+        {
+            for(int pixelNumber = 0; pixelNumber < DIGIT_WIDTH; pixelNumber++)
+            {
+                if(digitGrid[lineNumber][pixelNumber] == 'x')
+                {
+                    SDL_RenderDrawPoint(m_renderer, currentRightEdgeX - (DIGIT_WIDTH - pixelNumber), SCOREBOARD_TOP_EDGE_Y + lineNumber);
+                }
+            }
+        }
+        currentRightEdgeX -= DIGIT_WIDTH;
+    }
+}
+
+void GameState::drawFullBoard()
+{
+    SDL_SetRenderDrawColor(m_renderer, 0xff, 0xff, 0xff, SDL_ALPHA_OPAQUE);
+    for (size_t row = 0; row < m_board.size(); row++)
+    {
+        for (size_t col = 0; col < m_board[row].size(); col++)
         {
             int rowCenter = Y_CENTER(row);
             int colCenter = X_CENTER(col);
-            switch (board[row][col])
+            switch (m_board[row][col])
             {
             case '.':
             {
-                drawFilledCircle(renderer, colCenter, rowCenter, 4, { 0xff, 0xff, 0xff, SDL_ALPHA_OPAQUE });
+                drawFilledCircle(m_renderer, colCenter, rowCenter, 4, { 0xff, 0xff, 0xff, SDL_ALPHA_OPAQUE });
                 break;
             }
             case '*':
             {
-                drawFilledCircle(renderer, colCenter, rowCenter, 8, { 0xff, 0xff, 0xff, SDL_ALPHA_OPAQUE });
+                drawFilledCircle(m_renderer, colCenter, rowCenter, 8, { 0xff, 0xff, 0xff, SDL_ALPHA_OPAQUE });
                 break;
             }
             case 'x':
             {
-                // TODO cleanup board edges
-                if (board[row - 1][col] == 'x' && board[row + 1][col] == 'x')
+                // TODO cleanup m_board edges
+                if (m_board[row - 1][col] == 'x' && m_board[row + 1][col] == 'x')
                 {
                     // pure vertical
-                    SDL_RenderDrawLine(renderer, colCenter, row * TILE_HEIGHT, colCenter, (row + 1) * TILE_HEIGHT);
+                    SDL_RenderDrawLine(m_renderer, colCenter, row * TILE_HEIGHT, colCenter, (row + 1) * TILE_HEIGHT);
                 }
-                else if (board[row][col - 1] == 'x' && board[row][col + 1] == 'x')
+                else if (m_board[row][col - 1] == 'x' && m_board[row][col + 1] == 'x')
                 {
                     // pure horizontal
-                    SDL_RenderDrawLine(renderer, col * TILE_WIDTH, rowCenter, (col + 1) * TILE_WIDTH, rowCenter);
+                    SDL_RenderDrawLine(m_renderer, col * TILE_WIDTH, rowCenter, (col + 1) * TILE_WIDTH, rowCenter);
                 }
                 else
                 {
                     std::vector<std::pair<int, int>> points;
-                    auto pushIfX = [&board, &points](int x, int y)
+                    auto pushIfX = [this, &points](int x, int y)
                     {
-                        if (board[y][x] == 'x') { points.push_back({ x, y }); }
+                        if (m_board[y][x] == 'x') { points.push_back({ x, y }); }
                     };
                     pushIfX(col, row - 1);
                     pushIfX(col, row + 1);
@@ -189,8 +219,8 @@ void drawFullBoard(SDL_Renderer* renderer, BoardLayout& board)
                     if (points.size() == 2)
                     {
                         // connector
-                        SDL_RenderDrawLine(renderer, X_CENTER(points[0].first), Y_CENTER(points[0].second), colCenter, rowCenter);
-                        SDL_RenderDrawLine(renderer, colCenter, rowCenter, X_CENTER(points[1].first), Y_CENTER(points[1].second));
+                        SDL_RenderDrawLine(m_renderer, X_CENTER(points[0].first), Y_CENTER(points[0].second), colCenter, rowCenter);
+                        SDL_RenderDrawLine(m_renderer, colCenter, rowCenter, X_CENTER(points[1].first), Y_CENTER(points[1].second));
 
                     }
                     else
