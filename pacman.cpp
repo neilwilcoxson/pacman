@@ -20,7 +20,7 @@ int main(int argc, char** argv)
     GameState gameState(renderer);
 
     SDL_Event e;
-    while (true)
+    while (!gameState.gameOver())
     {
         while (SDL_PollEvent(&e))
         {

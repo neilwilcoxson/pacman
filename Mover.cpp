@@ -5,17 +5,17 @@
 static const int X_INCREMENT[] = { 0, 0, -1, 1, 0 };
 static const int Y_INCREMENT[] = { -1, 1, 0, 0, 0 };
 
-Mover::Mover(int startRow, int startCol, Direction startFacing)
-: m_row(startRow), m_col(startCol), m_facingDirection(startFacing)
+Mover::Mover(GameState& gameState, int startRow, int startCol, Direction startFacing)
+: m_row(startRow), m_col(startCol), m_facingDirection(startFacing), m_gameState(gameState)
 {
     m_lastDrawnTicks = SDL_GetTicks64();
 }
 
-void Mover::changeDirection(BoardLayout& board, Direction newDirection)
+void Mover::changeDirection(Direction newDirection)
 {
     int newRow = m_row + Y_INCREMENT[(size_t)newDirection];
     int newCol = m_col + X_INCREMENT[(size_t)newDirection];
-    if (board[newRow][newCol] != BOUNDARY)
+    if (m_gameState.m_board[newRow][newCol] != BOUNDARY)
     {
         LOG_DEBUG("Changing pending direction (%s) -> (%s)",
             DIRECTION_AS_STRING[(size_t)m_pendingDirection],
@@ -30,7 +30,7 @@ void Mover::changeDirection(BoardLayout& board, Direction newDirection)
     }
 }
 
-void Mover::handleMovement(BoardLayout& board)
+void Mover::handleMovement()
 {
     uint64_t currentTicks = SDL_GetTicks64();
     int numPixelsToMove = (currentTicks - m_lastDrawnTicks) * m_velocity / 1000;
@@ -52,7 +52,7 @@ void Mover::handleMovement(BoardLayout& board)
     int minYOffset = -TILE_HEIGHT / 2;
     int maxYOffset = TILE_HEIGHT / 2;
 
-    if (board[nextRow][nextCol] == BOUNDARY)
+    if (m_gameState.m_board[nextRow][nextCol] == BOUNDARY)
     {
         // restrict movement to the center of the last tile before a boundary
         if (xIncrement == -1) minXOffset = 0;
@@ -92,7 +92,7 @@ void Mover::handleMovement(BoardLayout& board)
         return;
     }
 
-    if (board[nextRow][nextCol] == BOUNDARY)
+    if (m_gameState.m_board[nextRow][nextCol] == BOUNDARY)
     {
         m_xPixelOffset = 0;
         m_yPixelOffset = 0;
@@ -102,12 +102,12 @@ void Mover::handleMovement(BoardLayout& board)
 
     m_row = nextRow;
     m_col = nextCol;
-    handleArrival(board);
+    handleArrival();
 
     if (xIncrement == -1) { m_xPixelOffset = maxXOffset - (m_xPixelOffset - minXOffset); m_yPixelOffset = 0; }
     if (xIncrement == 1) { m_xPixelOffset = minXOffset + (m_xPixelOffset - maxXOffset);  m_yPixelOffset = 0; }
     if (yIncrement == -1) { m_yPixelOffset = maxYOffset - (m_yPixelOffset - minYOffset); m_xPixelOffset = 0; }
-    if (yIncrement == 1) { m_yPixelOffset = minYOffset + (m_yPixelOffset - maxXOffset); m_xPixelOffset = 0; }
+    if (yIncrement == 1) { m_yPixelOffset = minYOffset + (m_yPixelOffset - maxYOffset); m_xPixelOffset = 0; }
 }
 
 void Mover::relocate(int row, int col)
@@ -116,20 +116,20 @@ void Mover::relocate(int row, int col)
     m_col = col;
 }
 
-Pacman::Pacman(int startRow, int startCol, Direction startFacing)
-: Mover(startRow, startCol, startFacing)
+Pacman::Pacman(GameState& gameState)
+: Mover(gameState, PACMAN_START_ROW, PACMAN_START_COL, PACMAN_START_DIRECTION)
 {
     m_velocity = 200;
     m_name = "pacman";
 }
 
-void Pacman::draw(SDL_Renderer* renderer, BoardLayout& board)
+void Pacman::draw()
 {
-    handleMovement(board);
-    drawFilledCircle(renderer, X_CENTER(m_col) + m_xPixelOffset, Y_CENTER(m_row) + m_yPixelOffset, RADIUS, COLOR);
+    handleMovement();
+    drawFilledCircle(m_gameState.m_renderer, X_CENTER(m_col) + m_xPixelOffset, Y_CENTER(m_row) + m_yPixelOffset, RADIUS, COLOR);
 }
 
-void Pacman::handleArrival(BoardLayout& board)
+void Pacman::handleArrival()
 {
     // if a key is being held down, attempt to handle it
     // the main loop handles the direction change if pacman is stopped
@@ -137,24 +137,43 @@ void Pacman::handleArrival(BoardLayout& board)
     const uint8_t* const keys = SDL_GetKeyboardState(&numKeys);
     if (numKeys > 0)
     {
-        if(keys[SDL_SCANCODE_UP]) changeDirection(board, Direction::UP);
-        else if(keys[SDL_SCANCODE_DOWN]) changeDirection(board, Direction::DOWN);
-        else if(keys[SDL_SCANCODE_LEFT]) changeDirection(board, Direction::LEFT);
-        else if(keys[SDL_SCANCODE_RIGHT]) changeDirection(board, Direction::RIGHT);
+        if(keys[SDL_SCANCODE_UP]) changeDirection(Direction::UP);
+        else if(keys[SDL_SCANCODE_DOWN]) changeDirection(Direction::DOWN);
+        else if(keys[SDL_SCANCODE_LEFT]) changeDirection(Direction::LEFT);
+        else if(keys[SDL_SCANCODE_RIGHT]) changeDirection(Direction::RIGHT);
     }
 
-    switch (board[m_row][m_col])
+    for(auto& ghost : m_gameState.m_ghosts)
+    {
+        if (ghost.m_row == m_row && ghost.m_col == m_col)
+        {
+            if(ghost.m_isFlashing)
+            {
+            }
+            else
+            {
+                LOG_INFO("Found a ghost, lose a life: %d -> %d", m_lives, m_lives - 1);
+                m_lives--;
+
+                m_row = PACMAN_START_ROW;
+                m_col = PACMAN_START_COL;
+                m_facingDirection = PACMAN_START_DIRECTION;
+            }
+        }
+    }
+
+    switch (m_gameState.m_board[m_row][m_col])
     {
     case DOT:
         m_score += m_normalDotPoints;
-        board[m_row][m_col] = ' ';
+        m_gameState.m_board[m_row][m_col] = ' ';
         break;
     case SUPER_DOT:
         m_score += m_superDotPoints;
-        board[m_row][m_col] = ' ';
+        m_gameState.m_board[m_row][m_col] = ' ';
         break;
     case WRAP:
-        m_col = board[0].size() - m_col - 1;
+        m_col = m_gameState.m_board[0].size() - m_col - 1;
         break;
     default:
         return;
@@ -168,14 +187,36 @@ void Pacman::handleWall()
     LOG_TRACE("Pacman: hit wall at row=%d col=%d", m_row, m_col);
 }
 
-Ghost::Ghost(int startRow, int startCol, Direction startFacing, const SDL_Color& color, const std::string& name)
-: Mover(startRow, startCol, startFacing), m_color(color)
+std::vector<Ghost> Ghost::makeGhosts(GameState& gameState)
+{
+    std::vector<Ghost> ghosts;
+    ghosts.reserve(NUM_GHOSTS);
+    ghosts.emplace_back(gameState, GHOST_START_ROW, GHOST_START_COL + 0, GHOST_START_DIRECTION, COLOR_RED, "Blinky");
+    ghosts.emplace_back(gameState, GHOST_START_ROW, GHOST_START_COL + 1, GHOST_START_DIRECTION, COLOR_PINK, "Pinky");
+    ghosts.emplace_back(gameState, GHOST_START_ROW, GHOST_START_COL + 2, GHOST_START_DIRECTION, COLOR_TURQUOISE, "Inky");
+    ghosts.emplace_back(gameState, GHOST_START_ROW, GHOST_START_COL + 3, GHOST_START_DIRECTION, COLOR_ORANGE, "Clyde");
+    return ghosts;
+}
+
+void Ghost::resetGhosts(std::vector<Ghost>& ghosts)
+{
+    int index = 0;
+    for(auto& ghost : ghosts)
+    {
+        ghost.relocate(GHOST_START_ROW, GHOST_START_COL + index);
+        ghost.inBox = true;
+        index++;
+    }
+}
+
+Ghost::Ghost(GameState& gameState, int startRow, int startCol, Direction startFacing, const SDL_Color& color, const std::string& name)
+: Mover(gameState, startRow, startCol, startFacing), m_color(color)
 {
     m_name = name;
     m_velocity = 50;
 }
 
-void Ghost::draw(SDL_Renderer* renderer, BoardLayout& board)
+void Ghost::draw()
 {
     SDL_Rect rect;
     rect.h = 20;
@@ -183,10 +224,10 @@ void Ghost::draw(SDL_Renderer* renderer, BoardLayout& board)
     rect.x = X_CENTER(m_col) + m_xPixelOffset;
     rect.y = Y_CENTER(m_row) + m_yPixelOffset;
 
-    handleMovement(board);
+    handleMovement();
 
-    SDL_SetRenderDrawColor(renderer, m_color.r, m_color.g, m_color.b, m_color.a);
-    SDL_RenderFillRect(renderer, &rect);
+    SDL_SetRenderDrawColor(m_gameState.m_renderer, m_color.r, m_color.g, m_color.b, m_color.a);
+    SDL_RenderFillRect(m_gameState.m_renderer, &rect);
 }
 
 void Ghost::handleWall()

@@ -5,10 +5,6 @@
 
 GameState::GameState(SDL_Renderer* renderer) : m_renderer(renderer)
 {
-    m_ghosts.reserve(4);
-    m_ghosts.emplace_back(15, 13, Direction::LEFT, COLOR_RED, "RED");
-    m_ghosts.emplace_back(15, 14, Direction::LEFT, COLOR_GREEN, "GREEN");
-    m_ghosts.emplace_back(15, 15, Direction::LEFT, COLOR_BLUE, "BLUE");
 }
 
 void GameState::draw()
@@ -19,7 +15,7 @@ void GameState::draw()
 
     drawFullBoard(m_renderer, m_board);
 
-    m_pacman.draw(m_renderer, m_board);
+    m_pacman.draw();
 
     uint64_t currentTicks = SDL_GetTicks64();
     if (currentTicks > m_nextGhostTicks)
@@ -40,7 +36,7 @@ void GameState::draw()
     }
     for (auto& ghost : m_ghosts)
     {
-        ghost.draw(m_renderer, m_board);
+        ghost.draw();
     }
     SDL_RenderPresent(m_renderer);
 }
@@ -50,20 +46,25 @@ void GameState::handleKeypress(const SDL_KeyCode keyCode)
     switch (keyCode)
     {
     case SDLK_UP:
-        m_pacman.changeDirection(m_board, Direction::UP);
+        m_pacman.changeDirection(Direction::UP);
         break;
     case SDLK_DOWN:
-        m_pacman.changeDirection(m_board, Direction::DOWN);
+        m_pacman.changeDirection(Direction::DOWN);
         break;
     case SDLK_LEFT:
-        m_pacman.changeDirection(m_board, Direction::LEFT);
+        m_pacman.changeDirection(Direction::LEFT);
         break;
     case SDLK_RIGHT:
-        m_pacman.changeDirection(m_board, Direction::RIGHT);
+        m_pacman.changeDirection(Direction::RIGHT);
         break;
     default:
         LOG_WARN("Unsupported keypress %d", keyCode);
     }
+}
+
+bool GameState::gameOver()
+{
+    return m_pacman.m_lives <= 0;
 }
 
 void drawFullBoard(SDL_Renderer* renderer, BoardLayout& board)
