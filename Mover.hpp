@@ -63,13 +63,18 @@ public:
     void handleWall() override;
 public:
     bool inBox = true;
+    bool m_isFlashing = false;
 private:
     static inline const int NUM_GHOSTS = 4;
     static inline const int GHOST_START_ROW = 15;
     static inline const int GHOST_START_COL = 13;
     static inline const Direction GHOST_START_DIRECTION = Direction::LEFT;
+    static inline const SDL_Color FLASH_COLOR[2] = {COLOR_WHITE, COLOR_BLUE};
+
     SDL_Color m_color;
-    bool m_isFlashing = false;
+
+    uint64_t m_flashingDeadlineTicks = 0;
+    int m_flashColorIndex = 0;
 
     friend class Pacman;
 };

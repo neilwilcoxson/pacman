@@ -149,6 +149,10 @@ void Pacman::handleArrival()
         {
             if(ghost.m_isFlashing)
             {
+                m_score += m_gameState.m_flashingGhostPoints;
+                m_gameState.m_flashingGhostPoints *= 2;
+                ghost.relocate(Ghost::GHOST_START_ROW, Ghost::GHOST_START_COL);
+                ghost.inBox = true;
             }
             else
             {
@@ -158,6 +162,7 @@ void Pacman::handleArrival()
                 m_row = PACMAN_START_ROW;
                 m_col = PACMAN_START_COL;
                 m_facingDirection = PACMAN_START_DIRECTION;
+                Ghost::resetGhosts(m_gameState.m_ghosts);
             }
         }
     }
@@ -171,6 +176,11 @@ void Pacman::handleArrival()
     case SUPER_DOT:
         m_score += m_superDotPoints;
         m_gameState.m_board[m_row][m_col] = ' ';
+        for(auto& ghost : m_gameState.m_ghosts)
+        {
+            ghost.m_isFlashing = true;
+            m_gameState.m_flashingGhostDeadline = SDL_GetTicks64() + m_gameState.m_flashingGhostDurationMs;
+        }
         break;
     case WRAP:
         m_col = m_gameState.m_board[0].size() - m_col - 1;
@@ -226,7 +236,20 @@ void Ghost::draw()
 
     handleMovement();
 
-    SDL_SetRenderDrawColor(m_gameState.m_renderer, m_color.r, m_color.g, m_color.b, m_color.a);
+    SDL_Color color = m_color;
+    if(m_isFlashing)
+    {
+        uint64_t currentTicks = SDL_GetTicks64();
+        if(currentTicks > m_flashingDeadlineTicks)
+        {
+            m_flashingDeadlineTicks = currentTicks + 1000;
+            m_flashColorIndex = 1 - m_flashColorIndex;
+        }
+
+        color = FLASH_COLOR[m_flashColorIndex];
+    }
+
+    SDL_SetRenderDrawColor(m_gameState.m_renderer, color.r, color.g, color.b, color.a);
     SDL_RenderFillRect(m_gameState.m_renderer, &rect);
 }
 

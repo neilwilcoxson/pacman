@@ -1,5 +1,6 @@
 #pragma once
 
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -23,6 +24,11 @@ private:
 
     uint64_t m_ghostSpwanIntervalTicks = 2000;
     uint64_t m_nextGhostTicks = 0;
+
+    static const inline int DEFAULT_FLASHING_GHOST_POINTS = 100;
+    int m_flashingGhostPoints = DEFAULT_FLASHING_GHOST_POINTS;
+    int m_flashingGhostDurationMs = 8000;
+    std::optional<uint64_t> m_flashingGhostDeadline;
 
     SDL_Renderer* m_renderer;
 

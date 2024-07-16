@@ -9,6 +9,15 @@ GameState::GameState(SDL_Renderer* renderer) : m_renderer(renderer)
 
 void GameState::draw()
 {
+    if(m_flashingGhostDeadline && *m_flashingGhostDeadline < SDL_GetTicks64())
+    {
+        m_flashingGhostDeadline.reset();
+        m_flashingGhostPoints = DEFAULT_FLASHING_GHOST_POINTS;
+        for(auto& ghost : m_ghosts)
+        {
+            ghost.m_isFlashing = false;
+        }
+    }
     // draw stationary elements
     SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 0xff);
     SDL_RenderClear(m_renderer);
