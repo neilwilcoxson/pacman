@@ -110,6 +110,11 @@ void Mover::handleMovement()
     if (yIncrement == 1) { m_yPixelOffset = minYOffset + (m_yPixelOffset - maxYOffset); m_xPixelOffset = 0; }
 }
 
+bool Mover::hasSamePositionAs(const Mover& otherMover) const
+{
+    return m_row == otherMover.m_row && m_col == otherMover.m_col;
+}
+
 void Mover::relocate(int row, int col)
 {
     m_row = row;
@@ -123,7 +128,7 @@ Pacman::Pacman(GameState& gameState)
     m_name = "pacman";
 }
 
-void Pacman::draw()
+void Pacman::update()
 {
     handleMovement();
     drawFilledCircle(m_gameState.m_renderer, X_CENTER(m_col) + m_xPixelOffset, Y_CENTER(m_row) + m_yPixelOffset, RADIUS, COLOR);
@@ -131,70 +136,19 @@ void Pacman::draw()
 
 void Pacman::handleArrival()
 {
-    // if a key is being held down, attempt to handle it
-    // the main loop handles the direction change if pacman is stopped
-    int numKeys = 0;
-    const uint8_t* const keys = SDL_GetKeyboardState(&numKeys);
-    if (numKeys > 0)
-    {
-        if(keys[SDL_SCANCODE_UP]) changeDirection(Direction::UP);
-        else if(keys[SDL_SCANCODE_DOWN]) changeDirection(Direction::DOWN);
-        else if(keys[SDL_SCANCODE_LEFT]) changeDirection(Direction::LEFT);
-        else if(keys[SDL_SCANCODE_RIGHT]) changeDirection(Direction::RIGHT);
-    }
-
-    for(auto& ghost : m_gameState.m_ghosts)
-    {
-        if (ghost.m_row == m_row && ghost.m_col == m_col)
-        {
-            if(ghost.m_isFlashing)
-            {
-                m_score += m_gameState.m_flashingGhostPoints;
-                m_gameState.m_flashingGhostPoints *= 2;
-                ghost.relocate(Ghost::GHOST_START_ROW, Ghost::GHOST_START_COL);
-                ghost.inBox = true;
-            }
-            else
-            {
-                LOG_INFO("Found a ghost, lose a life: %d -> %d", m_lives, m_lives - 1);
-                m_lives--;
-
-                m_row = PACMAN_START_ROW;
-                m_col = PACMAN_START_COL;
-                m_facingDirection = PACMAN_START_DIRECTION;
-                Ghost::resetGhosts(m_gameState.m_ghosts);
-            }
-        }
-    }
-
-    switch (m_gameState.m_board[m_row][m_col])
-    {
-    case DOT:
-        m_score += m_normalDotPoints;
-        m_gameState.m_board[m_row][m_col] = ' ';
-        break;
-    case SUPER_DOT:
-        m_score += m_superDotPoints;
-        m_gameState.m_board[m_row][m_col] = ' ';
-        for(auto& ghost : m_gameState.m_ghosts)
-        {
-            ghost.m_isFlashing = true;
-            m_gameState.m_flashingGhostDeadline = SDL_GetTicks64() + m_gameState.m_flashingGhostDurationMs;
-        }
-        break;
-    case WRAP:
-        m_col = m_gameState.m_board[0].size() - m_col - 1;
-        break;
-    default:
-        return;
-    }
-
-    LOG_INFO("Score: %llu", m_score);
+    m_gameState.handlePacmanArrival();
 }
 
 void Pacman::handleWall()
 {
     LOG_TRACE("Pacman: hit wall at row=%d col=%d", m_row, m_col);
+}
+
+void Pacman::reset()
+{
+    m_row = PACMAN_START_ROW;
+    m_col = PACMAN_START_COL;
+    m_facingDirection = PACMAN_START_DIRECTION;
 }
 
 std::vector<Ghost> Ghost::makeGhosts(GameState& gameState)
@@ -208,32 +162,15 @@ std::vector<Ghost> Ghost::makeGhosts(GameState& gameState)
     return ghosts;
 }
 
-void Ghost::resetGhosts(std::vector<Ghost>& ghosts)
-{
-    int index = 0;
-    for(auto& ghost : ghosts)
-    {
-        ghost.relocate(GHOST_START_ROW, GHOST_START_COL + index);
-        ghost.inBox = true;
-        index++;
-    }
-}
-
 Ghost::Ghost(GameState& gameState, int startRow, int startCol, Direction startFacing, const SDL_Color& color, const std::string& name)
-: Mover(gameState, startRow, startCol, startFacing), m_color(color)
+: Mover(gameState, startRow, startCol, startFacing), m_color(color), m_index(nextIndex++)
 {
     m_name = name;
     m_velocity = 50;
 }
 
-void Ghost::draw()
+void Ghost::update()
 {
-    SDL_Rect rect;
-    rect.h = 20;
-    rect.w = 20;
-    rect.x = X_CENTER(m_col) + m_xPixelOffset;
-    rect.y = Y_CENTER(m_row) + m_yPixelOffset;
-
     handleMovement();
 
     SDL_Color color = m_color;
@@ -249,6 +186,12 @@ void Ghost::draw()
         color = FLASH_COLOR[m_flashColorIndex];
     }
 
+    SDL_Rect rect;
+    rect.h = 20;
+    rect.w = 20;
+    rect.x = X_CENTER(m_col) + m_xPixelOffset;
+    rect.y = Y_CENTER(m_row) + m_yPixelOffset;
+
     SDL_SetRenderDrawColor(m_gameState.m_renderer, color.r, color.g, color.b, color.a);
     SDL_RenderFillRect(m_gameState.m_renderer, &rect);
 }
@@ -258,4 +201,11 @@ void Ghost::handleWall()
     LOG_TRACE("%s hits wall", m_name.c_str());
     // TODO ghosts always get stuck in the corner, add more logic here
     m_pendingDirection = (Direction)(((size_t)m_facingDirection + 1) % (size_t)Direction::MAX);
+}
+
+void Ghost::reset()
+{
+    relocate(GHOST_START_ROW, GHOST_START_COL + m_index);
+    inBox = true;
+    m_isFlashing = false;
 }

@@ -14,9 +14,11 @@ class GameState
 {
 public:
     GameState(SDL_Renderer* renderer);
+
     void draw();
     void handleKeypress(const SDL_KeyCode keyCode);
     bool gameOver();
+    void handlePacmanArrival();
 private:
     BoardLayout m_board = BASE_LAYOUT;
     Pacman m_pacman { *this };
@@ -29,6 +31,12 @@ private:
     int m_flashingGhostPoints = DEFAULT_FLASHING_GHOST_POINTS;
     int m_flashingGhostDurationMs = 8000;
     std::optional<uint64_t> m_flashingGhostDeadline;
+
+    int m_normalDotPoints = 10;
+    int m_superDotPoints = 100;
+
+    uint64_t m_score = 0;
+    int m_lives = 3;
 
     SDL_Renderer* m_renderer;
 

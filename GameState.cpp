@@ -24,7 +24,7 @@ void GameState::draw()
 
     drawFullBoard(m_renderer, m_board);
 
-    m_pacman.draw();
+    m_pacman.update();
 
     uint64_t currentTicks = SDL_GetTicks64();
     if (currentTicks > m_nextGhostTicks)
@@ -45,7 +45,7 @@ void GameState::draw()
     }
     for (auto& ghost : m_ghosts)
     {
-        ghost.draw();
+        ghost.update();
     }
     SDL_RenderPresent(m_renderer);
 }
@@ -73,7 +73,71 @@ void GameState::handleKeypress(const SDL_KeyCode keyCode)
 
 bool GameState::gameOver()
 {
-    return m_pacman.m_lives <= 0;
+    return m_lives <= 0;
+}
+
+void GameState::handlePacmanArrival()
+{
+    // if a key is being held down, attempt to handle it
+    // the main loop handles the direction change if pacman is stopped
+    int numKeys = 0;
+    const uint8_t* const keys = SDL_GetKeyboardState(&numKeys);
+    if (numKeys > 0)
+    {
+        if(keys[SDL_SCANCODE_UP]) m_pacman.changeDirection(Direction::UP);
+        else if(keys[SDL_SCANCODE_DOWN]) m_pacman.changeDirection(Direction::DOWN);
+        else if(keys[SDL_SCANCODE_LEFT]) m_pacman.changeDirection(Direction::LEFT);
+        else if(keys[SDL_SCANCODE_RIGHT]) m_pacman.changeDirection(Direction::RIGHT);
+    }
+
+    for(auto& ghost : m_ghosts)
+    {
+        if (m_pacman.hasSamePositionAs(ghost))
+        {
+            if(ghost.m_isFlashing)
+            {
+                m_score += m_flashingGhostPoints;
+                m_flashingGhostPoints *= 2;
+                ghost.reset();
+            }
+            else
+            {
+                LOG_INFO("Found a ghost, lose a life: %d -> %d", m_lives, m_lives - 1);
+                m_lives--;
+
+                m_pacman.reset();
+                for(auto& ghost : m_ghosts)
+                {
+                    ghost.reset();
+                }
+            }
+        }
+    }
+
+    auto& pacmansTile = m_board[m_pacman.m_row][m_pacman.m_col];
+    switch (pacmansTile)
+    {
+    case DOT:
+        m_score += m_normalDotPoints;
+        pacmansTile = ' ';
+        break;
+    case SUPER_DOT:
+        m_score += m_superDotPoints;
+        pacmansTile = ' ';
+        for(auto& ghost : m_ghosts)
+        {
+            ghost.m_isFlashing = true;
+            m_flashingGhostDeadline = SDL_GetTicks64() + m_flashingGhostDurationMs;
+        }
+        break;
+    case WRAP:
+        m_pacman.m_col = m_board[0].size() - m_pacman.m_col - 1;
+        break;
+    default:
+        return;
+    }
+
+    LOG_INFO("Score: %llu", m_score);
 }
 
 void drawFullBoard(SDL_Renderer* renderer, BoardLayout& board)
