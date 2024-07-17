@@ -7,31 +7,37 @@
 // forward declaration
 class GameState;
 
-class Mover
+class GridObject
 {
 public:
-    Mover(GameState& gameState, int startRow, int startCol, Direction startFacing);
+    GridObject(GameState& gameState, int row, int col);
     virtual void update() = 0;
     virtual void reset() = 0;
-    void changeDirection(Direction newDirection);
-    bool hasSamePositionAs(const Mover& otherMover) const;
+    bool hasSamePositionAs(const GridObject& otherObject) const;
     void relocate(int row, int col);
-protected:
-    virtual void handleArrival() {};
-    virtual void handleWall() = 0;
-    virtual void handleMovement();
-
 protected:
     int m_row;
     int m_col;
     int m_xPixelOffset = 0; // offset from center within the column
     int m_yPixelOffset = 0; // offset from center within the row
+    std::string m_name;
+    GameState& m_gameState;
+};
+
+class Mover : public GridObject
+{
+public:
+    Mover(GameState& gameState, int startRow, int startCol, Direction startFacing);
+    void changeDirection(Direction newDirection);
+protected:
+    virtual void handleArrival() {};
+    virtual void handleWall() = 0;
+    virtual void handleMovement();
+protected:
     Direction m_facingDirection = Direction::LEFT;
     Direction m_pendingDirection = Direction::LEFT;
     uint64_t m_lastDrawnTicks = 0;
     int m_velocity = 100; // pixels per second (might need to change based on resizable window)
-    std::string m_name;
-    GameState& m_gameState;
 };
 
 class Pacman : public Mover
@@ -89,18 +95,19 @@ private:
     friend class Pacman;
 };
 
-class Fruit : public Mover
+class Fruit : public GridObject
 {
 public:
     Fruit(GameState& gameState);
     void update() override;
     void reset() override;
-protected:
-    void handleWall() override {};
-    void handleMovement() override {};
-public:
-    bool m_available = false;
+    void activate();
+    inline bool isActive() { return m_available; }
 private:
     static inline const int FRUIT_SPAWN_ROW = 18;
     static inline const int FRUIT_SPAWN_COL = 14;
+    static inline const int FRUIT_DURATION_TICKS = 8000;
+
+    bool m_available = false;
+    uint64_t m_fruitDeadlineTicks = 0;
 };

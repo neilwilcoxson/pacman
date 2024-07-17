@@ -117,7 +117,7 @@ void GameState::handlePacmanArrival()
         }
     }
 
-    if(m_fruit.m_available && m_pacman.hasSamePositionAs(m_fruit))
+    if(m_fruit.isActive() && m_pacman.hasSamePositionAs(m_fruit))
     {
         m_score += m_fruitPoints;
         m_fruitPoints *= m_fruitPointsMultiplier;
@@ -150,7 +150,7 @@ void GameState::handlePacmanArrival()
 
     if(m_dotsEaten >= m_fruitThreshold)
     {
-        m_fruit.m_available = true;
+        m_fruit.activate();
         m_fruitThreshold += m_fruitThresholdIncrement;
     }
 

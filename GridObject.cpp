@@ -1,12 +1,29 @@
 #include "GameState.hpp"
-#include "Mover.hpp"
+#include "GridObject.hpp"
 #include "util.hpp"
 
 static const int X_INCREMENT[] = { 0, 0, -1, 1, 0 };
 static const int Y_INCREMENT[] = { -1, 1, 0, 0, 0 };
 
+GridObject::GridObject(GameState& gameState, int row, int col)
+: m_row(row), m_col(col), m_gameState(gameState)
+{
+
+}
+
+bool GridObject::hasSamePositionAs(const GridObject& otherObject) const
+{
+    return m_row == otherObject.m_row && m_col == otherObject.m_col;
+}
+
+void GridObject::relocate(int row, int col)
+{
+    m_row = row;
+    m_col = col;
+}
+
 Mover::Mover(GameState& gameState, int startRow, int startCol, Direction startFacing)
-: m_row(startRow), m_col(startCol), m_facingDirection(startFacing), m_gameState(gameState)
+: GridObject(gameState, startRow, startCol), m_facingDirection(startFacing)
 {
     m_lastDrawnTicks = SDL_GetTicks64();
 }
@@ -108,17 +125,6 @@ void Mover::handleMovement()
     if (xIncrement == 1) { m_xPixelOffset = minXOffset + (m_xPixelOffset - maxXOffset);  m_yPixelOffset = 0; }
     if (yIncrement == -1) { m_yPixelOffset = maxYOffset - (m_yPixelOffset - minYOffset); m_xPixelOffset = 0; }
     if (yIncrement == 1) { m_yPixelOffset = minYOffset + (m_yPixelOffset - maxYOffset); m_xPixelOffset = 0; }
-}
-
-bool Mover::hasSamePositionAs(const Mover& otherMover) const
-{
-    return m_row == otherMover.m_row && m_col == otherMover.m_col;
-}
-
-void Mover::relocate(int row, int col)
-{
-    m_row = row;
-    m_col = col;
 }
 
 Pacman::Pacman(GameState& gameState)
@@ -276,10 +282,9 @@ void Ghost::reset()
     m_isFlashing = false;
 }
 
-Fruit::Fruit(GameState& gameState) : Mover(gameState, FRUIT_SPAWN_ROW, FRUIT_SPAWN_COL, Direction::LEFT)
+Fruit::Fruit(GameState& gameState) : GridObject(gameState, FRUIT_SPAWN_ROW, FRUIT_SPAWN_COL)
 {
     m_name = "fruit";
-    m_velocity = 0; // fruit doesn't move right now (or perhaps ever)
 }
 
 void Fruit::update()
@@ -289,11 +294,17 @@ void Fruit::update()
         return;
     }
 
+    if(SDL_GetTicks64() > m_fruitDeadlineTicks)
+    {
+        m_available = false;
+        return;
+    }
+
     SDL_Rect rect;
     rect.h = 20;
     rect.w = 20;
-    rect.x = X_CENTER(FRUIT_SPAWN_COL) + m_xPixelOffset;
-    rect.y = Y_CENTER(FRUIT_SPAWN_ROW) + m_yPixelOffset;
+    rect.x = X_CENTER(FRUIT_SPAWN_COL) + m_xPixelOffset - rect.w / 2;
+    rect.y = Y_CENTER(FRUIT_SPAWN_ROW) + m_yPixelOffset - rect.h / 2;
     SDL_Color color = COLOR_RED;
     SDL_SetRenderDrawColor(m_gameState.m_renderer, color.r, color.g, color.b, color.a);
     SDL_RenderFillRect(m_gameState.m_renderer, &rect);
@@ -302,4 +313,10 @@ void Fruit::update()
 void Fruit::reset()
 {
     m_available = false;
+}
+
+void Fruit::activate()
+{
+    m_available = true;
+    m_fruitDeadlineTicks = SDL_GetTicks64() + FRUIT_DURATION_TICKS;
 }

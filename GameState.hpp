@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-#include "Mover.hpp"
+#include "GridObject.hpp"
 #include "util.hpp"
 
 // forward declaration
