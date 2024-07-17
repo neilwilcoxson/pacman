@@ -95,11 +95,24 @@ private:
     friend class Pacman;
 };
 
-class Fruit : public GridObject
+class DisplayFruit : public GridObject
 {
 public:
-    Fruit(GameState& gameState);
-    void update() override;
+    static std::vector<DisplayFruit> makeDisplayFruits(GameState& gameState);
+
+    DisplayFruit(GameState& gameState, int index);
+    virtual void update() override;
+    void reset() override {};
+private:
+    static inline const int FRUIT_DISPLAY_ROW = 31;
+    static inline const int FRUIT_DISPLAY_START_COL = 27;
+};
+
+class PointsFruit : public DisplayFruit
+{
+public:
+    PointsFruit(GameState& gameState);
+    virtual void update() override;
     void reset() override;
     void activate();
     inline bool isActive() { return m_available; }

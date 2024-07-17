@@ -26,7 +26,8 @@ private:
     BoardLayout m_board = BASE_LAYOUT;
     Pacman m_pacman { *this };
     std::vector<Ghost> m_ghosts = Ghost::makeGhosts(*this);
-    Fruit m_fruit{ *this };
+    PointsFruit m_fruit{ *this };
+    std::vector<DisplayFruit> m_displayFruits = DisplayFruit::makeDisplayFruits(*this);
 
     uint64_t m_ghostSpwanIntervalTicks = 2000;
     uint64_t m_nextGhostTicks = 0;
@@ -43,6 +44,7 @@ private:
     uint64_t m_score = 0;
     int m_lives = 3;
     int m_level = 1;
+    int m_dotsRemaining = 1;
 
     // tracking for fruit
     int m_dotsEaten = 0;
@@ -56,5 +58,6 @@ private:
     friend class Mover;
     friend class Pacman;
     friend class Ghost;
-    friend class Fruit;
+    friend class DisplayFruit;
+    friend class PointsFruit;
 };

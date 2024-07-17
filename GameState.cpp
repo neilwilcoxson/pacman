@@ -9,6 +9,13 @@ GameState::GameState(SDL_Renderer* renderer) : m_renderer(renderer)
 
 void GameState::draw()
 {
+    if(m_dotsRemaining <= 0)
+    {
+        m_level++;
+        m_board = BASE_LAYOUT;
+        LOG_INFO("Level: %d", m_level);
+    }
+
     if(m_flashingGhostDeadline && *m_flashingGhostDeadline < SDL_GetTicks64())
     {
         m_flashingGhostDeadline.reset();
@@ -49,6 +56,12 @@ void GameState::draw()
         ghost.update();
     }
     m_fruit.update();
+
+    for (int levelFruitIndex = 0; levelFruitIndex < m_level; levelFruitIndex++)
+    {
+        int index = levelFruitIndex >= m_displayFruits.size() ? (m_displayFruits.size() - 1) : levelFruitIndex;
+        m_displayFruits[index].update();
+    }
 
     SDL_RenderPresent(m_renderer);
 }
@@ -188,6 +201,7 @@ void GameState::drawScore()
 
 void GameState::drawFullBoard()
 {
+    m_dotsRemaining = 0;
     SDL_SetRenderDrawColor(m_renderer, 0xff, 0xff, 0xff, SDL_ALPHA_OPAQUE);
     for (size_t row = 0; row < m_board.size(); row++)
     {
@@ -197,18 +211,15 @@ void GameState::drawFullBoard()
             int colCenter = X_CENTER(col);
             switch (m_board[row][col])
             {
-            case '.':
-            {
+            case DOT:
                 drawFilledCircle(m_renderer, colCenter, rowCenter, 4, { 0xff, 0xff, 0xff, SDL_ALPHA_OPAQUE });
+                m_dotsRemaining++;
                 break;
-            }
-            case '*':
-            {
+            case SUPER_DOT:
+                m_dotsRemaining++;
                 drawFilledCircle(m_renderer, colCenter, rowCenter, 8, { 0xff, 0xff, 0xff, SDL_ALPHA_OPAQUE });
                 break;
-            }
-            case 'x':
-            {
+            case BOUNDARY:
                 // TODO cleanup m_board edges
                 if (m_board[row - 1][col] == 'x' && m_board[row + 1][col] == 'x')
                 {
@@ -245,11 +256,8 @@ void GameState::drawFullBoard()
                     }
                 }
                 break;
-            }
             default:
-            {
                 break;
-            }
             }
         }
     }

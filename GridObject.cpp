@@ -282,12 +282,43 @@ void Ghost::reset()
     m_isFlashing = false;
 }
 
-Fruit::Fruit(GameState& gameState) : GridObject(gameState, FRUIT_SPAWN_ROW, FRUIT_SPAWN_COL)
+std::vector<DisplayFruit> DisplayFruit::makeDisplayFruits(GameState& gameState)
 {
-    m_name = "fruit";
+    int index = 0;
+    std::vector<DisplayFruit> displayFruits;
+    displayFruits.reserve(4);
+    displayFruits.emplace_back(gameState, index++);
+    displayFruits.emplace_back(gameState, index++);
+    displayFruits.emplace_back(gameState, index++);
+    return displayFruits;
 }
 
-void Fruit::update()
+DisplayFruit::DisplayFruit(GameState& gameState, int index)
+: GridObject(gameState, FRUIT_DISPLAY_ROW, FRUIT_DISPLAY_START_COL - index)
+{
+    m_name = std::string("fruit ") + std::to_string(index);
+}
+
+void DisplayFruit::update()
+{
+    SDL_Rect rect;
+    rect.h = 20;
+    rect.w = 20;
+    rect.x = X_CENTER(m_col) + m_xPixelOffset - rect.w / 2;
+    rect.y = Y_CENTER(m_row) + m_yPixelOffset - rect.h / 2;
+    SDL_Color color = COLOR_RED;
+    SDL_SetRenderDrawColor(m_gameState.m_renderer, color.r, color.g, color.b, color.a);
+    SDL_RenderFillRect(m_gameState.m_renderer, &rect);
+}
+
+PointsFruit::PointsFruit(GameState& gameState)
+: DisplayFruit(gameState, -1)
+{
+    m_row = FRUIT_SPAWN_ROW;
+    m_col = FRUIT_SPAWN_COL;
+}
+
+void PointsFruit::update()
 {
     if(!m_available)
     {
@@ -300,22 +331,15 @@ void Fruit::update()
         return;
     }
 
-    SDL_Rect rect;
-    rect.h = 20;
-    rect.w = 20;
-    rect.x = X_CENTER(FRUIT_SPAWN_COL) + m_xPixelOffset - rect.w / 2;
-    rect.y = Y_CENTER(FRUIT_SPAWN_ROW) + m_yPixelOffset - rect.h / 2;
-    SDL_Color color = COLOR_RED;
-    SDL_SetRenderDrawColor(m_gameState.m_renderer, color.r, color.g, color.b, color.a);
-    SDL_RenderFillRect(m_gameState.m_renderer, &rect);
+    DisplayFruit::update();
 }
 
-void Fruit::reset()
+void PointsFruit::reset()
 {
     m_available = false;
 }
 
-void Fruit::activate()
+void PointsFruit::activate()
 {
     m_available = true;
     m_fruitDeadlineTicks = SDL_GetTicks64() + FRUIT_DURATION_TICKS;
