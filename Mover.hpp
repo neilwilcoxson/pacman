@@ -19,7 +19,7 @@ public:
 protected:
     virtual void handleArrival() {};
     virtual void handleWall() = 0;
-    void handleMovement();
+    virtual void handleMovement();
 
 protected:
     int m_row;
@@ -87,4 +87,20 @@ private:
     int m_flashColorIndex = 0;
 
     friend class Pacman;
+};
+
+class Fruit : public Mover
+{
+public:
+    Fruit(GameState& gameState);
+    void update() override;
+    void reset() override;
+protected:
+    void handleWall() override {};
+    void handleMovement() override {};
+public:
+    bool m_available = false;
+private:
+    static inline const int FRUIT_SPAWN_ROW = 18;
+    static inline const int FRUIT_SPAWN_COL = 14;
 };

@@ -275,3 +275,31 @@ void Ghost::reset()
     m_inBox = true;
     m_isFlashing = false;
 }
+
+Fruit::Fruit(GameState& gameState) : Mover(gameState, FRUIT_SPAWN_ROW, FRUIT_SPAWN_COL, Direction::LEFT)
+{
+    m_name = "fruit";
+    m_velocity = 0; // fruit doesn't move right now (or perhaps ever)
+}
+
+void Fruit::update()
+{
+    if(!m_available)
+    {
+        return;
+    }
+
+    SDL_Rect rect;
+    rect.h = 20;
+    rect.w = 20;
+    rect.x = X_CENTER(FRUIT_SPAWN_COL) + m_xPixelOffset;
+    rect.y = Y_CENTER(FRUIT_SPAWN_ROW) + m_yPixelOffset;
+    SDL_Color color = COLOR_RED;
+    SDL_SetRenderDrawColor(m_gameState.m_renderer, color.r, color.g, color.b, color.a);
+    SDL_RenderFillRect(m_gameState.m_renderer, &rect);
+}
+
+void Fruit::reset()
+{
+    m_available = false;
+}

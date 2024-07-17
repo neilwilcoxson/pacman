@@ -48,6 +48,8 @@ void GameState::draw()
     {
         ghost.update();
     }
+    m_fruit.update();
+
     SDL_RenderPresent(m_renderer);
 }
 
@@ -115,11 +117,19 @@ void GameState::handlePacmanArrival()
         }
     }
 
+    if(m_fruit.m_available && m_pacman.hasSamePositionAs(m_fruit))
+    {
+        m_score += m_fruitPoints;
+        m_fruitPoints *= m_fruitPointsMultiplier;
+        m_fruit.reset();
+    }
+
     auto& pacmansTile = m_board[m_pacman.m_row][m_pacman.m_col];
     switch (pacmansTile)
     {
     case DOT:
         m_score += m_normalDotPoints;
+        m_dotsEaten++;
         pacmansTile = ' ';
         break;
     case SUPER_DOT:
@@ -136,6 +146,12 @@ void GameState::handlePacmanArrival()
         break;
     default:
         return;
+    }
+
+    if(m_dotsEaten >= m_fruitThreshold)
+    {
+        m_fruit.m_available = true;
+        m_fruitThreshold += m_fruitThresholdIncrement;
     }
 
     LOG_INFO("Score: %llu", m_score);
