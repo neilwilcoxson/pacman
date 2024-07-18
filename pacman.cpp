@@ -1,6 +1,4 @@
-#include <SDL.h>    
-#include <vector>
-
+#include <SDL.h>
 #include "GameState.hpp"
 
 int main(int argc, char** argv)
@@ -36,10 +34,11 @@ int main(int argc, char** argv)
             }
         }
 
-        gameState.draw();
+        gameState.update();
     }
 
 quit:
+    SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
     return 0;

@@ -2,9 +2,6 @@
 #include "GridObject.hpp"
 #include "util.hpp"
 
-static const int X_INCREMENT[] = { 0, 0, -1, 1, 0 };
-static const int Y_INCREMENT[] = { -1, 1, 0, 0, 0 };
-
 GridObject::GridObject(GameState& gameState, int row, int col)
 : m_row(row), m_col(col), m_gameState(gameState)
 {

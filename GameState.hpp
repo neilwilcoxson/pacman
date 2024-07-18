@@ -15,13 +15,14 @@ class GameState
 public:
     GameState(SDL_Renderer* renderer);
 
-    void draw();
+    void update();
     void handleKeypress(const SDL_KeyCode keyCode);
     bool gameOver();
     void handlePacmanArrival();
 private:
     void drawScore();
     void drawFullBoard();
+    void drawBoundary(int row, int col);
 private:
     BoardLayout m_board = BASE_LAYOUT;
     Pacman m_pacman { *this };

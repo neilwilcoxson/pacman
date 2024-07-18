@@ -24,6 +24,9 @@ struct SDL_Renderer;
 #define LOG_ERROR(format, ...) LOG_AT_LEVEL(LOG_LEVEL_ERROR, format, __VA_ARGS__)
 #define LOG_ASSERT(condition, format, ...) if(!(condition)) { LOG_AT_LEVEL(LOG_LEVEL_ASSERT, #condition " fails, " format, __VA_ARGS__); exit(EXIT_FAILURE); }
 
+const int X_INCREMENT[] = { 0, 0, -1, 1, 0 };
+const int Y_INCREMENT[] = { -1, 1, 0, 0, 0 };
+
 typedef std::vector<std::string> BoardLayout;
 const char BOUNDARY = 'x';
 const char DOT = '.';

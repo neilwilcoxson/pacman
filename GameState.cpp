@@ -7,8 +7,9 @@ GameState::GameState(SDL_Renderer* renderer) : m_renderer(renderer)
 {
 }
 
-void GameState::draw()
+void GameState::update()
 {
+    // handle moving to next level
     if(m_dotsRemaining <= 0)
     {
         m_level++;
@@ -16,24 +17,7 @@ void GameState::draw()
         LOG_INFO("Level: %d", m_level);
     }
 
-    if(m_flashingGhostDeadline && *m_flashingGhostDeadline < SDL_GetTicks64())
-    {
-        m_flashingGhostDeadline.reset();
-        m_flashingGhostPoints = DEFAULT_FLASHING_GHOST_POINTS;
-        for(auto& ghost : m_ghosts)
-        {
-            ghost.m_isFlashing = false;
-        }
-    }
-    // draw stationary elements
-    SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 0xff);
-    SDL_RenderClear(m_renderer);
-
-    drawScore();
-    drawFullBoard();
-
-    m_pacman.update();
-
+    // handle ghosts entering the playing field from the box
     uint64_t currentTicks = SDL_GetTicks64();
     if (currentTicks > m_nextGhostTicks)
     {
@@ -49,18 +33,40 @@ void GameState::draw()
                 break;
             }
         }
+    }
 
-    }
-    for (auto& ghost : m_ghosts)
+    // handle timer for flashing ghosts
+    if(m_flashingGhostDeadline && *m_flashingGhostDeadline < currentTicks)
     {
-        ghost.update();
+        m_flashingGhostDeadline.reset();
+        m_flashingGhostPoints = DEFAULT_FLASHING_GHOST_POINTS;
+        for(auto& ghost : m_ghosts)
+        {
+            ghost.m_isFlashing = false;
+        }
     }
-    m_fruit.update();
+
+    // draw stationary elements
+    SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 0xff);
+    SDL_RenderClear(m_renderer);
+    drawScore();
+    drawFullBoard();
 
     for (int levelFruitIndex = 0; levelFruitIndex < m_level; levelFruitIndex++)
     {
         int index = levelFruitIndex >= m_displayFruits.size() ? (m_displayFruits.size() - 1) : levelFruitIndex;
         m_displayFruits[index].update();
+    }
+
+    // draw points claimable fruit if it is active
+    m_fruit.update();
+
+    // draw moving elements
+    m_pacman.update();
+
+    for (auto& ghost : m_ghosts)
+    {
+        ghost.update();
     }
 
     SDL_RenderPresent(m_renderer);
@@ -220,45 +226,38 @@ void GameState::drawFullBoard()
                 drawFilledCircle(m_renderer, colCenter, rowCenter, 8, { 0xff, 0xff, 0xff, SDL_ALPHA_OPAQUE });
                 break;
             case BOUNDARY:
-                // TODO cleanup m_board edges
-                if (m_board[row - 1][col] == 'x' && m_board[row + 1][col] == 'x')
-                {
-                    // pure vertical
-                    SDL_RenderDrawLine(m_renderer, colCenter, row * TILE_HEIGHT, colCenter, (row + 1) * TILE_HEIGHT);
-                }
-                else if (m_board[row][col - 1] == 'x' && m_board[row][col + 1] == 'x')
-                {
-                    // pure horizontal
-                    SDL_RenderDrawLine(m_renderer, col * TILE_WIDTH, rowCenter, (col + 1) * TILE_WIDTH, rowCenter);
-                }
-                else
-                {
-                    std::vector<std::pair<int, int>> points;
-                    auto pushIfX = [this, &points](int x, int y)
-                    {
-                        if (m_board[y][x] == 'x') { points.push_back({ x, y }); }
-                    };
-                    pushIfX(col, row - 1);
-                    pushIfX(col, row + 1);
-                    pushIfX(col - 1, row);
-                    pushIfX(col + 1, row);
-
-                    if (points.size() == 2)
-                    {
-                        // connector
-                        SDL_RenderDrawLine(m_renderer, X_CENTER(points[0].first), Y_CENTER(points[0].second), colCenter, rowCenter);
-                        SDL_RenderDrawLine(m_renderer, colCenter, rowCenter, X_CENTER(points[1].first), Y_CENTER(points[1].second));
-
-                    }
-                    else
-                    {
-                        LOG_TRACE("Attempted connection with size=%llu at row=%llu col=%llu", points.size(), row, col);
-                    }
-                }
+                drawBoundary(row, col);
                 break;
             default:
                 break;
             }
         }
+    }
+}
+
+void GameState::drawBoundary(int row, int col)
+{
+    std::vector<Direction> edges;
+
+    for(size_t dir = 0; dir < (size_t)Direction::MAX; dir++)
+    {
+        int adjRow = row + Y_INCREMENT[dir];
+        int adjCol = col + X_INCREMENT[dir];
+        if (adjRow < 0 || adjRow >= m_board.size() || adjCol < 0 || adjCol >= m_board[adjRow].size())
+        {
+            continue;
+        }
+
+        if(m_board[adjRow][adjCol] == BOUNDARY)
+        {
+            edges.push_back((Direction)dir);
+        }
+    }
+
+    for(Direction dir : edges)
+    {
+        int xInc = X_INCREMENT[(size_t)dir];
+        int yInc = Y_INCREMENT[(size_t)dir];
+        SDL_RenderDrawLine(m_renderer, X_CENTER(col + xInc), Y_CENTER(row + yInc), X_CENTER(col), Y_CENTER(row));
     }
 }
