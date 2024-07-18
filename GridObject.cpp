@@ -19,6 +19,8 @@ void GridObject::relocate(int row, int col)
     m_col = col;
 }
 
+bool directionValid();
+
 Mover::Mover(GameState& gameState, int startRow, int startCol, Direction startFacing)
 : GridObject(gameState, startRow, startCol), m_facingDirection(startFacing)
 {
@@ -27,9 +29,8 @@ Mover::Mover(GameState& gameState, int startRow, int startCol, Direction startFa
 
 void Mover::changeDirection(Direction newDirection)
 {
-    int newRow = m_row + Y_INCREMENT[(size_t)newDirection];
-    int newCol = m_col + X_INCREMENT[(size_t)newDirection];
-    if (m_gameState.m_board[newRow][newCol] != BOUNDARY)
+    
+    if (directionValid(newDirection))
     {
         LOG_DEBUG("Changing pending direction (%s) -> (%s)",
             DIRECTION_AS_STRING[(size_t)m_pendingDirection],
@@ -124,6 +125,13 @@ void Mover::handleMovement()
     if (yIncrement == 1) { m_yPixelOffset = minYOffset + (m_yPixelOffset - maxYOffset); m_xPixelOffset = 0; }
 }
 
+bool Mover::directionValid(Direction newDirection)
+{
+    int newRow = m_row + Y_INCREMENT[(size_t)newDirection];
+    int newCol = m_col + X_INCREMENT[(size_t)newDirection];
+    return m_gameState.m_board[newRow][newCol] != BOUNDARY;
+}
+
 Pacman::Pacman(GameState& gameState)
 : Mover(gameState, PACMAN_START_ROW, PACMAN_START_COL, PACMAN_START_DIRECTION)
 {
@@ -170,6 +178,7 @@ Ghost::Ghost(GameState& gameState, int startRow, int startCol, Direction startFa
 {
     m_name = name;
     m_velocity = 50;
+    m_awayFromPacmanDirectionInterval += m_index;
 }
 
 void Ghost::update()
@@ -247,28 +256,28 @@ void Ghost::handleWall()
 
 void Ghost::handleArrival()
 {
-    auto directionValid = [this](Direction direction)
+    for (size_t newDirection = 0; newDirection < (size_t)Direction::MAX; newDirection++)
     {
-        return m_gameState.m_board[m_row + Y_INCREMENT[(size_t)direction]][m_col + X_INCREMENT[(size_t)direction]] != BOUNDARY;
-    };
-
-    Direction newDirection = m_facingDirection;
-
-    if(directionValid(Direction::UP) && m_gameState.m_pacman.m_row < m_row)
-    {
-        m_facingDirection = Direction::UP;
-    }
-    else if(directionValid(Direction::DOWN) && m_gameState.m_pacman.m_row > m_row)
-    {
-        m_facingDirection = Direction::DOWN;
-    }
-    else if(directionValid(Direction::LEFT) && m_gameState.m_pacman.m_col < m_col)
-    {
-        m_facingDirection = Direction::LEFT;
-    }
-    else if(directionValid(Direction::RIGHT) && m_gameState.m_pacman.m_col > m_col)
-    {
-        m_facingDirection = Direction::RIGHT;
+        if (directionValid((Direction)newDirection))
+        {
+            if (abs(m_row + Y_INCREMENT[newDirection] - m_gameState.m_pacman.m_row) < abs(m_row - m_gameState.m_pacman.m_row)
+                || abs(m_col + X_INCREMENT[newDirection] - m_gameState.m_pacman.m_col) < abs(m_col - m_gameState.m_pacman.m_col))
+            {
+                // this direction gets the ghost closer to pacman
+                if(m_numMovesTowardPacman < m_awayFromPacmanDirectionInterval)
+                {
+                    m_numMovesTowardPacman++;
+                    m_pendingDirection = m_facingDirection = (Direction)newDirection;
+                    return;
+                }
+            }
+            else if(m_numMovesTowardPacman >= m_awayFromPacmanDirectionInterval)
+            {
+                m_numMovesTowardPacman = 0;
+                m_pendingDirection = m_facingDirection = (Direction)newDirection;
+                return;
+            }
+        }
     }
 }
 

@@ -33,6 +33,7 @@ protected:
     virtual void handleArrival() {};
     virtual void handleWall() = 0;
     virtual void handleMovement();
+    bool directionValid(Direction newDirection);
 protected:
     Direction m_facingDirection = Direction::LEFT;
     Direction m_pendingDirection = Direction::LEFT;
@@ -91,6 +92,9 @@ private:
 
     uint64_t m_flashingDeadlineTicks = 0;
     int m_flashColorIndex = 0;
+
+    int m_awayFromPacmanDirectionInterval = 10;
+    int m_numMovesTowardPacman = 0;
 
     friend class Pacman;
 };
