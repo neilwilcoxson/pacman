@@ -203,20 +203,26 @@ void Ghost::update()
         color = FLASH_COLOR[m_flashColorIndex];
     }
 
-    // TODO store ghost in full res instead of scaling
     const std::vector<std::string> GHOST_GRID =
     {
-        "    xx    ",
-        "  xxxxxx  ",
-        " xx xx xx ",
-        " xxxxxxxx ",
-        " xxxxxxxx ",
-        " xxxxxxxx ",
-        " xxxxxxxx ",
-        " x  x x x "   
+        "     xxxx     ",
+        "   xxxxxxxx   ",
+        "  xxxxxxxxxx  ",
+        " xxxxxxxxxxxx ",
+        " xxxxxxxxxxxx ",
+        " xxxxxxxxxxxx ",
+        " xxxxxxxxxxxx ",
+        "xxxxxxxxxxxxxx",
+        "xxxxxxxxxxxxxx",
+        "xxxxxxxxxxxxxx",
+        "xxxxxxxxxxxxxx",
+        "xxxxxxxxxxxxxx",
+        "xxxxxxxxxxxxxx",
+        "xx xxx  xxx xx",
+        "x   xx  xx   x"
     };
 
-    const int SCALING_FACTOR = 3;
+    const int SCALING_FACTOR = 2;
     std::vector<std::string> scaledGhost;
 
     for (const auto& line : GHOST_GRID)
