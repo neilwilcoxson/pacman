@@ -143,7 +143,8 @@ void GameState::handlePacmanArrival()
         m_fruit.reset();
     }
 
-    auto& pacmansTile = m_board[m_pacman.m_row][m_pacman.m_col];
+    auto[row, col] = m_pacman.getPosition();
+    auto& pacmansTile = m_board[row][col];
     switch (pacmansTile)
     {
     case DOT:
@@ -161,7 +162,7 @@ void GameState::handlePacmanArrival()
         }
         break;
     case WRAP:
-        m_pacman.m_col = m_board[0].size() - m_pacman.m_col - 1;
+        m_pacman.relocate(row, m_board[0].size() - col - 1);
         break;
     default:
         return;

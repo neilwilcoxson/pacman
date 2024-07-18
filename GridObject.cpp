@@ -19,8 +19,6 @@ void GridObject::relocate(int row, int col)
     m_col = col;
 }
 
-bool directionValid();
-
 Mover::Mover(GameState& gameState, int startRow, int startCol, Direction startFacing)
 : GridObject(gameState, startRow, startCol), m_facingDirection(startFacing)
 {
@@ -125,11 +123,18 @@ void Mover::handleMovement()
     if (yIncrement == 1) { m_yPixelOffset = minYOffset + (m_yPixelOffset - maxYOffset); m_xPixelOffset = 0; }
 }
 
-bool Mover::directionValid(Direction newDirection)
+bool Mover::directionValid(const Direction newDirection) const
 {
     int newRow = m_row + Y_INCREMENT[(size_t)newDirection];
     int newCol = m_col + X_INCREMENT[(size_t)newDirection];
     return m_gameState.m_board[newRow][newCol] != BOUNDARY;
+}
+
+bool Mover::directionIsCloser(const Direction newDirection, const Mover& otherMover) const
+{
+    const size_t newDirIndex = (size_t)newDirection;
+    return abs(m_row + Y_INCREMENT[newDirIndex] - otherMover.m_row) < abs(m_row - otherMover.m_row)
+        || abs(m_col + X_INCREMENT[newDirIndex] - otherMover.m_col) < abs(m_col - otherMover.m_col);
 }
 
 Pacman::Pacman(GameState& gameState)
@@ -256,25 +261,25 @@ void Ghost::handleWall()
 
 void Ghost::handleArrival()
 {
-    for (size_t newDirection = 0; newDirection < (size_t)Direction::MAX; newDirection++)
+    for (size_t newDirIndex = 0; newDirIndex < (size_t)Direction::MAX; newDirIndex++)
     {
-        if (directionValid((Direction)newDirection))
+        Direction newDirection = (Direction)newDirIndex;
+        if (directionValid(newDirection))
         {
-            if (abs(m_row + Y_INCREMENT[newDirection] - m_gameState.m_pacman.m_row) < abs(m_row - m_gameState.m_pacman.m_row)
-                || abs(m_col + X_INCREMENT[newDirection] - m_gameState.m_pacman.m_col) < abs(m_col - m_gameState.m_pacman.m_col))
+            if (directionIsCloser(newDirection, m_gameState.m_pacman))
             {
                 // this direction gets the ghost closer to pacman
                 if(m_numMovesTowardPacman < m_awayFromPacmanDirectionInterval)
                 {
                     m_numMovesTowardPacman++;
-                    m_pendingDirection = m_facingDirection = (Direction)newDirection;
+                    m_pendingDirection = m_facingDirection = newDirection;
                     return;
                 }
             }
             else if(m_numMovesTowardPacman >= m_awayFromPacmanDirectionInterval)
             {
                 m_numMovesTowardPacman = 0;
-                m_pendingDirection = m_facingDirection = (Direction)newDirection;
+                m_pendingDirection = m_facingDirection = newDirection;
                 return;
             }
         }

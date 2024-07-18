@@ -7,12 +7,19 @@
 // forward declaration
 class GameState;
 
+struct GridPosition
+{
+    int row;
+    int col;
+};
+
 class GridObject
 {
 public:
     GridObject(GameState& gameState, int row, int col);
     virtual void update() = 0;
     virtual void reset() = 0;
+    GridPosition getPosition() const { return {m_row, m_col}; }
     bool hasSamePositionAs(const GridObject& otherObject) const;
     void relocate(int row, int col);
 protected:
@@ -33,7 +40,8 @@ protected:
     virtual void handleArrival() {};
     virtual void handleWall() = 0;
     virtual void handleMovement();
-    bool directionValid(Direction newDirection);
+    bool directionValid(const Direction newDirection) const;
+    bool directionIsCloser(const Direction newDirection, const Mover& otherMover) const;
 protected:
     Direction m_facingDirection = Direction::LEFT;
     Direction m_pendingDirection = Direction::LEFT;
@@ -57,9 +65,6 @@ private:
     static inline const Direction PACMAN_START_DIRECTION = Direction::LEFT;
     static inline const SDL_Color COLOR { 0xff, 0xff, 0, SDL_ALPHA_OPAQUE };
     static inline const int RADIUS = 10;
-
-    friend class GameState;
-    friend class Ghost;
 };
 
 class Ghost : public Mover
@@ -95,8 +100,6 @@ private:
 
     int m_awayFromPacmanDirectionInterval = 10;
     int m_numMovesTowardPacman = 0;
-
-    friend class Pacman;
 };
 
 class DisplayFruit : public GridObject
