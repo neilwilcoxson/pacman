@@ -64,7 +64,7 @@ private:
     static inline const int PACMAN_START_COL = 14;
     static inline const Direction PACMAN_START_DIRECTION = Direction::LEFT;
     static inline const SDL_Color COLOR { 0xff, 0xff, 0, SDL_ALPHA_OPAQUE };
-    static inline const int RADIUS = 10;
+    static inline const int RADIUS = 14;
 };
 
 class Ghost : public Mover

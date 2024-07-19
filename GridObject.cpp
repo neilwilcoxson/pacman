@@ -115,12 +115,12 @@ void Mover::handleMovement()
 
     m_row = nextRow;
     m_col = nextCol;
-    handleArrival();
 
-    if (xIncrement == -1) { m_xPixelOffset = maxXOffset - (m_xPixelOffset - minXOffset); m_yPixelOffset = 0; }
-    if (xIncrement == 1) { m_xPixelOffset = minXOffset + (m_xPixelOffset - maxXOffset);  m_yPixelOffset = 0; }
-    if (yIncrement == -1) { m_yPixelOffset = maxYOffset - (m_yPixelOffset - minYOffset); m_xPixelOffset = 0; }
-    if (yIncrement == 1) { m_yPixelOffset = minYOffset + (m_yPixelOffset - maxYOffset); m_xPixelOffset = 0; }
+    // adjust pixel offset to be relative to the new row and column
+    m_xPixelOffset = xIncrement * (m_xPixelOffset - maxXOffset + minXOffset);
+    m_yPixelOffset = yIncrement * (m_yPixelOffset - maxYOffset + minYOffset);
+
+    handleArrival();
 }
 
 bool Mover::directionValid(const Direction newDirection) const
@@ -274,7 +274,6 @@ void Ghost::handleArrival()
         {
             if (directionIsCloser(newDirection, m_gameState.m_pacman))
             {
-                // this direction gets the ghost closer to pacman
                 if(m_numMovesTowardPacman < m_awayFromPacmanDirectionInterval)
                 {
                     m_numMovesTowardPacman++;
@@ -304,6 +303,8 @@ std::vector<DisplayFruit> DisplayFruit::makeDisplayFruits(GameState& gameState)
     int index = 0;
     std::vector<DisplayFruit> displayFruits;
     displayFruits.reserve(4);
+    // TODO implement different fruits
+    displayFruits.emplace_back(gameState, index++);
     displayFruits.emplace_back(gameState, index++);
     displayFruits.emplace_back(gameState, index++);
     displayFruits.emplace_back(gameState, index++);
