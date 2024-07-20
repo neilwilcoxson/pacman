@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdio.h>
+#include <functional>
 #include <string>
 #include <vector>
 
@@ -226,3 +227,57 @@ const char* const DIRECTION_AS_STRING[] =
 #define Y_CENTER(row) ((row) * TILE_HEIGHT + TILE_HEIGHT / 2)
 
 void drawFilledCircle(SDL_Renderer* renderer, const size_t xCenter, const size_t yCenter, const size_t radius, const SDL_Color& color);
+
+class IntervalDeadlineTimer
+{
+public:
+    IntervalDeadlineTimer(uint64_t interval, bool autoRestart, std::function<void()> callback)
+    : m_interval(interval), m_callback(callback), m_autoRestart(autoRestart)
+    {
+    }
+
+    void start()
+    {
+        m_running = true;
+        m_deadline = SDL_GetTicks64() + m_interval;
+    }
+
+    void stop()
+    {
+        m_running = false;
+    }
+
+    void check()
+    {
+        if(!m_running)
+        {
+            return;
+        }
+
+        uint64_t currentTicks = SDL_GetTicks64();
+        if(currentTicks >= m_deadline)
+        {
+            m_callback();
+            if(m_autoRestart)
+            {
+                start();
+            }
+            else
+            {
+                stop();
+            }
+        }
+    }
+
+private:
+    uint64_t m_interval;
+    uint64_t m_deadline;
+    std::function<void()> m_callback;
+    bool m_autoRestart;
+    bool m_running = true;
+
+private:
+    // Disallow default constructor and copy; std::move ok
+    IntervalDeadlineTimer() = delete;
+    IntervalDeadlineTimer(IntervalDeadlineTimer&) = delete;
+};

@@ -5,6 +5,7 @@
 
 GameState::GameState(SDL_Renderer* renderer) : m_renderer(renderer)
 {
+    LOG_INFO("Constructing GameState");
 }
 
 void GameState::update()

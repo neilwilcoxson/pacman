@@ -15,6 +15,8 @@ int main(int argc, char** argv)
     SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     LOG_ASSERT(renderer != nullptr, "Error creating Renderer: %s", SDL_GetError());
 
+    LOG_INFO("SDL started successfully");
+
     GameState gameState(renderer);
 
     SDL_Event e;
