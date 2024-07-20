@@ -6,6 +6,7 @@
 GameState::GameState(SDL_Renderer* renderer) : m_renderer(renderer)
 {
     LOG_INFO("Constructing GameState");
+    m_ghostSpawnTimer.start();
 }
 
 void GameState::update()
@@ -18,34 +19,8 @@ void GameState::update()
         LOG_INFO("Level: %d", m_level);
     }
 
-    // handle ghosts entering the playing field from the box
-    uint64_t currentTicks = SDL_GetTicks64();
-    if (currentTicks > m_nextGhostTicks)
-    {
-        for (auto& ghost : m_ghosts)
-        {
-            if (ghost.m_inBox)
-            {
-                const int GHOST_SPAWN_ROW = 11;
-                const int GHOST_SPAWN_COL = 15;
-                ghost.relocate(GHOST_SPAWN_ROW, GHOST_SPAWN_COL);
-                ghost.m_inBox = false;
-                m_nextGhostTicks = currentTicks + m_ghostSpwanIntervalTicks;
-                break;
-            }
-        }
-    }
-
-    // handle timer for flashing ghosts
-    if(m_flashingGhostDeadline && *m_flashingGhostDeadline < currentTicks)
-    {
-        m_flashingGhostDeadline.reset();
-        m_flashingGhostPoints = DEFAULT_FLASHING_GHOST_POINTS;
-        for(auto& ghost : m_ghosts)
-        {
-            ghost.m_isFlashing = false;
-        }
-    }
+    m_ghostSpawnTimer.check();
+    m_flashingGhostTimer.check();
 
     // draw stationary elements
     SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 0xff);
@@ -115,6 +90,7 @@ void GameState::handlePacmanArrival()
 
     for(auto& ghost : m_ghosts)
     {
+        // TODO pacman doesn't die unless he is moving
         if (m_pacman.hasSamePositionAs(ghost))
         {
             if(ghost.m_isFlashing)
@@ -158,8 +134,8 @@ void GameState::handlePacmanArrival()
         pacmansTile = ' ';
         for(auto& ghost : m_ghosts)
         {
-            ghost.m_isFlashing = true;
-            m_flashingGhostDeadline = SDL_GetTicks64() + m_flashingGhostDurationMs;
+            ghost.handleSuperDot();
+            m_flashingGhostTimer.start();
         }
         break;
     case WRAP:

@@ -231,6 +231,11 @@ void drawFilledCircle(SDL_Renderer* renderer, const size_t xCenter, const size_t
 class IntervalDeadlineTimer
 {
 public:
+    // Disallow default constructor and copy
+    IntervalDeadlineTimer() = delete;
+    IntervalDeadlineTimer(IntervalDeadlineTimer&) = delete;
+    IntervalDeadlineTimer(IntervalDeadlineTimer&&) = default;
+
     IntervalDeadlineTimer(uint64_t interval, bool autoRestart, std::function<void()> callback)
     : m_interval(interval), m_callback(callback), m_autoRestart(autoRestart)
     {
@@ -271,13 +276,8 @@ public:
 
 private:
     uint64_t m_interval;
-    uint64_t m_deadline;
+    uint64_t m_deadline = 0;
     std::function<void()> m_callback;
     bool m_autoRestart;
-    bool m_running = true;
-
-private:
-    // Disallow default constructor and copy; std::move ok
-    IntervalDeadlineTimer() = delete;
-    IntervalDeadlineTimer(IntervalDeadlineTimer&) = delete;
+    bool m_running = false;
 };

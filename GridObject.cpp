@@ -193,13 +193,7 @@ void Ghost::update()
     SDL_Color color = m_color;
     if(m_isFlashing)
     {
-        uint64_t currentTicks = SDL_GetTicks64();
-        if(currentTicks > m_flashingDeadlineTicks)
-        {
-            m_flashingDeadlineTicks = currentTicks + 1000;
-            m_flashColorIndex = 1 - m_flashColorIndex;
-        }
-
+        m_flashColorTimer.check();
         color = FLASH_COLOR[m_flashColorIndex];
     }
 
@@ -298,6 +292,12 @@ void Ghost::reset()
     m_isFlashing = false;
 }
 
+void Ghost::handleSuperDot()
+{
+    m_isFlashing = true;
+    m_flashColorTimer.start();
+}
+
 std::vector<DisplayFruit> DisplayFruit::makeDisplayFruits(GameState& gameState)
 {
     int index = 0;
@@ -338,27 +338,22 @@ PointsFruit::PointsFruit(GameState& gameState)
 
 void PointsFruit::update()
 {
-    if(!m_available)
-    {
-        return;
-    }
+    m_availabilityTimer.check();
 
-    if(SDL_GetTicks64() > m_fruitDeadlineTicks)
+    if(m_available)
     {
-        m_available = false;
-        return;
+        DisplayFruit::update();
     }
-
-    DisplayFruit::update();
 }
 
 void PointsFruit::reset()
 {
     m_available = false;
+    m_availabilityTimer.stop();
 }
 
 void PointsFruit::activate()
 {
     m_available = true;
-    m_fruitDeadlineTicks = SDL_GetTicks64() + FRUIT_DURATION_TICKS;
+    m_availabilityTimer.start();
 }
