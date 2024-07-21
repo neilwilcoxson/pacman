@@ -197,6 +197,7 @@ void Ghost::update()
         color = FLASH_COLOR[m_flashColorIndex];
     }
 
+    // clang-format off
     const std::vector<std::string> GHOST_GRID =
     {
         "     xxxx     ",
@@ -215,6 +216,7 @@ void Ghost::update()
         "xx xxx  xxx xx",
         "x   xx  xx   x"
     };
+    // clang-format on
 
     const int SCALING_FACTOR = 2;
     std::vector<std::string> scaledGhost;

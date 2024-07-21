@@ -44,6 +44,8 @@ const char BOUNDARY = 'x';
 const char DOT = '.';
 const char SUPER_DOT = '*';
 const char WRAP = 'w';
+
+// clang-format off
 const BoardLayout BASE_LAYOUT =
 {
     "                              ",
@@ -79,11 +81,14 @@ const BoardLayout BASE_LAYOUT =
     " xxxxxxxxxxxxxxxxxxxxxxxxxxxx ",
     "                               "
 };
+// clang-format on
+
 const int SCREEN_WIDTH = 720;
 const int SCREEN_HEIGHT = 960;
 const int TILE_WIDTH = SCREEN_WIDTH / (int)BASE_LAYOUT[0].length();
 const int TILE_HEIGHT = SCREEN_HEIGHT / (int)BASE_LAYOUT.size();
 
+// clang-format off
 const std::vector<std::vector<std::string>> NUMERAL_DIGITS =
 {
     {
@@ -206,6 +211,7 @@ const std::vector<std::vector<std::string>> NUMERAL_DIGITS =
         "      xx    "
     }
 };
+// clang-format on
 
 const SDL_Color COLOR_RED = { 0xff, 0x00, 0x00, 0xff };
 const SDL_Color COLOR_GREEN = { 0x00, 0xff, 0x00, 0xff };

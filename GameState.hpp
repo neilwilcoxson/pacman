@@ -30,6 +30,7 @@ private:
     PointsFruit m_fruit{ *this };
     std::vector<DisplayFruit> m_displayFruits { DisplayFruit::makeDisplayFruits(*this) };
 
+    // clang-format off
     uint64_t m_ghostSpawnIntervalTicks = 2000;
     IntervalDeadlineTimer m_ghostSpawnTimer {
         m_ghostSpawnIntervalTicks,
@@ -61,6 +62,7 @@ private:
             for(auto& ghost : m_ghosts) ghost.m_isFlashing = false;
         }
     };
+    // clang-format on
 
     // general scoring parameters
     int m_normalDotPoints = 10;

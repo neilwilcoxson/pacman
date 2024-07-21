@@ -153,6 +153,7 @@ private:
     static inline const int FRUIT_SPAWN_COL = 14;
     static inline const int FRUIT_DURATION_TICKS = 8000;
 
+    // clang-format off
     bool m_available = false;
     IntervalDeadlineTimer m_availabilityTimer {
         FRUIT_DURATION_TICKS,
@@ -161,4 +162,5 @@ private:
             m_available = false;
         }
     };
+    // clang-format on
 };
