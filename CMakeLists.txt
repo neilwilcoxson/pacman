@@ -13,3 +13,10 @@ target_compile_features(pacman PUBLIC cxx_std_17)
 target_include_directories(pacman PRIVATE ${SDL2_INCLUDE_DIRS})
 target_link_libraries(pacman PRIVATE ${SDL2_LIBRARIES})
 target_sources(pacman PRIVATE GameState.cpp GridObject.cpp util.cpp)
+
+add_custom_target(format
+    COMMAND clang-format -i *.cpp *.hpp
+    COMMENT "Running clang-format")
+add_custom_target(check-format
+    COMMAND clang-format --dry-run *.cpp *.hpp
+    COMMENT "Running clang-format --dry-run")

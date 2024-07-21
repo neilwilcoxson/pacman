@@ -1,6 +1,12 @@
 # pacman
 A clone game implemented in C++ with SDL2
 
+## Development Notes
+### clang-format enforcement
+* A ```.clang-format``` file is provided in the root of the repository. Pull Requests and direct pushes to the main branch will be checked against this by GitHub actions.
+* CMake targets ```format``` and ```check-format``` are provided to run on developer machines.
+* ```clang-format off``` is ok to use for manually formatted arrays, strings, and similar.
+
 ## Build Directions
 ### General Prerequisites
 1. [SDL2-devel](https://github.com/libsdl-org/SDL/releases/tag/release-2.30.5) for your OS

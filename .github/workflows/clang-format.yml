@@ -15,5 +15,5 @@ jobs:
     - name: Run clang-format
       run: |
         clang-format --version
-        find . -regex '.*\.\(cpp\|h\)' | xargs clang-format -i
+        find . -regex '.*\.\(cpp\|hpp\)' | xargs clang-format -i
         git diff --exit-code
