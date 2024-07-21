@@ -17,6 +17,7 @@ struct SDL_Renderer;
 
 #define activeLevel LOG_LEVEL_INFO
 
+// TODO variadic macros don't work for string only with GCC
 #define LOG_AT_LEVEL(level, format, ...) if(activeLevel >= level) printf("[%s] %s:%d: " format "\n", #level, __FILE__, __LINE__, __VA_ARGS__)
 #define LOG_TRACE(format, ...) LOG_AT_LEVEL(LOG_LEVEL_TRACE, format, __VA_ARGS__)
 #define LOG_DEBUG(format, ...) LOG_AT_LEVEL(LOG_LEVEL_DEBUG, format, __VA_ARGS__)
@@ -226,7 +227,7 @@ const char* const DIRECTION_AS_STRING[] =
 #define X_CENTER(col) ((col) * TILE_WIDTH + TILE_WIDTH / 2)
 #define Y_CENTER(row) ((row) * TILE_HEIGHT + TILE_HEIGHT / 2)
 
-void drawFilledCircle(SDL_Renderer* renderer, const size_t xCenter, const size_t yCenter, const size_t radius, const SDL_Color& color);
+void drawFilledCircle(SDL_Renderer* renderer, const int xCenter, const int yCenter, const int radius, const SDL_Color& color);
 
 class IntervalDeadlineTimer
 {

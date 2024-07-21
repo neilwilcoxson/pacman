@@ -22,14 +22,14 @@ int main(int argc, char** argv)
     SDL_Event e;
     while (!gameState.gameOver())
     {
-        while (SDL_PollEvent(&e))
+        if (SDL_PollEvent(&e))
         {
             switch (e.type)
             {
             case SDL_QUIT:
                 goto quit;
             case SDL_KEYDOWN:
-                gameState.handleKeypress((SDL_KeyCode)e.key.keysym.sym);
+                gameState.handleKeypress((SDL_Keycode)e.key.keysym.sym);
                 break;
             default:
                 break;

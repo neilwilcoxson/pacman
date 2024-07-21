@@ -72,7 +72,7 @@ private:
     static inline const int PACMAN_START_ROW = 23;
     static inline const int PACMAN_START_COL = 14;
     static inline const Direction PACMAN_START_DIRECTION = Direction::LEFT;
-    static inline const SDL_Color COLOR { 0xff, 0xff, 0, SDL_ALPHA_OPAQUE };
+    static inline const SDL_Color COLOR = COLOR_YELLOW;
     static inline const int RADIUS = 14;
 };
 
@@ -131,7 +131,7 @@ public:
     DisplayFruit(DisplayFruit&) = delete;
     DisplayFruit(DisplayFruit&&) = default;
     virtual void update() override;
-    void reset() override {};
+    virtual void reset() override {};
 private:
     static inline const int FRUIT_DISPLAY_ROW = 31;
     static inline const int FRUIT_DISPLAY_START_COL = 27;

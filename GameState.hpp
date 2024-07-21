@@ -16,7 +16,7 @@ public:
     GameState(SDL_Renderer* renderer);
 
     void update();
-    void handleKeypress(const SDL_KeyCode keyCode);
+    void handleKeypress(const SDL_Keycode keyCode);
     bool gameOver();
     void handlePacmanArrival();
 private:
@@ -52,7 +52,7 @@ private:
 
     static const inline int DEFAULT_FLASHING_GHOST_POINTS = 100;
     int m_flashingGhostPoints = DEFAULT_FLASHING_GHOST_POINTS;
-    int m_flashingGhostDurationMs = 8000;
+    uint64_t m_flashingGhostDurationMs = 8000;
     IntervalDeadlineTimer m_flashingGhostTimer {
         m_flashingGhostDurationMs,
         false,

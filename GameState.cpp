@@ -28,9 +28,9 @@ void GameState::update()
     drawScore();
     drawFullBoard();
 
-    for (int levelFruitIndex = 0; levelFruitIndex < m_level; levelFruitIndex++)
+    for (size_t levelFruitIndex = 0; levelFruitIndex < m_level; levelFruitIndex++)
     {
-        int index = levelFruitIndex >= m_displayFruits.size() ? (m_displayFruits.size() - 1) : levelFruitIndex;
+        size_t index = levelFruitIndex >= m_displayFruits.size() ? (m_displayFruits.size() - 1) : levelFruitIndex;
         m_displayFruits[index].update();
     }
 
@@ -48,7 +48,7 @@ void GameState::update()
     SDL_RenderPresent(m_renderer);
 }
 
-void GameState::handleKeypress(const SDL_KeyCode keyCode)
+void GameState::handleKeypress(const SDL_Keycode keyCode)
 {
     switch (keyCode)
     {
@@ -139,7 +139,7 @@ void GameState::handlePacmanArrival()
         }
         break;
     case WRAP:
-        m_pacman.relocate(row, m_board[0].size() - col - 1);
+        m_pacman.relocate(row, (int)m_board[0].size() - col - 1);
         break;
     default:
         return;
@@ -158,15 +158,15 @@ void GameState::drawScore()
 {
     static const int SCOREBOARD_RIGHT_EDGE_X = 300;
     static const int SCOREBOARD_TOP_EDGE_Y = 10;
-    static const int DIGIT_WIDTH = NUMERAL_DIGITS[0][0].length();
-    static const int DIGIT_HEIGHT = NUMERAL_DIGITS[0].size();
+    static const int DIGIT_WIDTH = (int)NUMERAL_DIGITS[0][0].length();
+    static const int DIGIT_HEIGHT = (int)NUMERAL_DIGITS[0].size();
     static const SDL_Color COLOR = COLOR_WHITE;
 
     SDL_SetRenderDrawColor(m_renderer, COLOR.r, COLOR.g, COLOR.b, COLOR.a);
 
     int currentRightEdgeX = SCOREBOARD_RIGHT_EDGE_X;
 
-    for(int remainingScore = m_score; remainingScore != 0; remainingScore /= 10)
+    for(uint64_t remainingScore = m_score; remainingScore != 0; remainingScore /= 10)
     {
         const auto& digitGrid = NUMERAL_DIGITS[remainingScore % 10];
         for(int lineNumber = 0; lineNumber < DIGIT_HEIGHT; lineNumber++)
@@ -187,9 +187,9 @@ void GameState::drawFullBoard()
 {
     m_dotsRemaining = 0;
     SDL_SetRenderDrawColor(m_renderer, 0xff, 0xff, 0xff, SDL_ALPHA_OPAQUE);
-    for (size_t row = 0; row < m_board.size(); row++)
+    for (int row = 0; row < (int)m_board.size(); row++)
     {
-        for (size_t col = 0; col < m_board[row].size(); col++)
+        for (int col = 0; col < (int)m_board[row].size(); col++)
         {
             int rowCenter = Y_CENTER(row);
             int colCenter = X_CENTER(col);

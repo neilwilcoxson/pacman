@@ -2,6 +2,7 @@
 .vs/
 x86/
 x64/
+build/
 *.sln
 *.vcxproj
 *.vcxproj.user
