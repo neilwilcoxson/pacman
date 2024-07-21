@@ -5,7 +5,8 @@ int main(int argc, char** argv)
 {
     LOG_ASSERT(SDL_Init(SDL_INIT_EVERYTHING) == 0, "SDL init error: %s", SDL_GetError());
 
-    SDL_Window* window = SDL_CreateWindow("Pacman", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
+    SDL_Window* window = SDL_CreateWindow(
+        "Pacman", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
     LOG_ASSERT(window != nullptr, "SDL create window error: %s", SDL_GetError());
 
     SDL_Surface* screenSurface = SDL_GetWindowSurface(window);
@@ -20,11 +21,11 @@ int main(int argc, char** argv)
     GameState gameState(renderer);
 
     SDL_Event e;
-    while (!gameState.gameOver())
+    while(!gameState.gameOver())
     {
-        if (SDL_PollEvent(&e))
+        if(SDL_PollEvent(&e))
         {
-            switch (e.type)
+            switch(e.type)
             {
             case SDL_QUIT:
                 goto quit;

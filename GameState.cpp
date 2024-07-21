@@ -28,7 +28,7 @@ void GameState::update()
     drawScore();
     drawFullBoard();
 
-    for (size_t levelFruitIndex = 0; levelFruitIndex < m_level; levelFruitIndex++)
+    for(size_t levelFruitIndex = 0; levelFruitIndex < m_level; levelFruitIndex++)
     {
         size_t index = levelFruitIndex >= m_displayFruits.size() ? (m_displayFruits.size() - 1) : levelFruitIndex;
         m_displayFruits[index].update();
@@ -40,7 +40,7 @@ void GameState::update()
     // draw moving elements
     m_pacman.update();
 
-    for (auto& ghost : m_ghosts)
+    for(auto& ghost : m_ghosts)
     {
         ghost.update();
     }
@@ -50,7 +50,7 @@ void GameState::update()
 
 void GameState::handleKeypress(const SDL_Keycode keyCode)
 {
-    switch (keyCode)
+    switch(keyCode)
     {
     case SDLK_UP:
         m_pacman.changeDirection(Direction::UP);
@@ -80,18 +80,22 @@ void GameState::handlePacmanArrival()
     // the main loop handles the direction change if pacman is stopped
     int numKeys = 0;
     const uint8_t* const keys = SDL_GetKeyboardState(&numKeys);
-    if (numKeys > 0)
+    if(numKeys > 0)
     {
-        if(keys[SDL_SCANCODE_UP]) m_pacman.changeDirection(Direction::UP);
-        else if(keys[SDL_SCANCODE_DOWN]) m_pacman.changeDirection(Direction::DOWN);
-        else if(keys[SDL_SCANCODE_LEFT]) m_pacman.changeDirection(Direction::LEFT);
-        else if(keys[SDL_SCANCODE_RIGHT]) m_pacman.changeDirection(Direction::RIGHT);
+        if(keys[SDL_SCANCODE_UP])
+            m_pacman.changeDirection(Direction::UP);
+        else if(keys[SDL_SCANCODE_DOWN])
+            m_pacman.changeDirection(Direction::DOWN);
+        else if(keys[SDL_SCANCODE_LEFT])
+            m_pacman.changeDirection(Direction::LEFT);
+        else if(keys[SDL_SCANCODE_RIGHT])
+            m_pacman.changeDirection(Direction::RIGHT);
     }
 
     for(auto& ghost : m_ghosts)
     {
         // TODO pacman doesn't die unless he is moving
-        if (m_pacman.hasSamePositionAs(ghost))
+        if(m_pacman.hasSamePositionAs(ghost))
         {
             if(ghost.m_isFlashing)
             {
@@ -120,9 +124,9 @@ void GameState::handlePacmanArrival()
         m_fruit.reset();
     }
 
-    auto[row, col] = m_pacman.getPosition();
+    auto [row, col] = m_pacman.getPosition();
     auto& pacmansTile = m_board[row][col];
-    switch (pacmansTile)
+    switch(pacmansTile)
     {
     case DOT:
         m_score += m_normalDotPoints;
@@ -175,7 +179,10 @@ void GameState::drawScore()
             {
                 if(digitGrid[lineNumber][pixelNumber] == 'x')
                 {
-                    SDL_RenderDrawPoint(m_renderer, currentRightEdgeX - (DIGIT_WIDTH - pixelNumber), SCOREBOARD_TOP_EDGE_Y + lineNumber);
+                    SDL_RenderDrawPoint(
+                        m_renderer,
+                        currentRightEdgeX - (DIGIT_WIDTH - pixelNumber),
+                        SCOREBOARD_TOP_EDGE_Y + lineNumber);
                 }
             }
         }
@@ -187,21 +194,21 @@ void GameState::drawFullBoard()
 {
     m_dotsRemaining = 0;
     SDL_SetRenderDrawColor(m_renderer, 0xff, 0xff, 0xff, SDL_ALPHA_OPAQUE);
-    for (int row = 0; row < (int)m_board.size(); row++)
+    for(int row = 0; row < (int)m_board.size(); row++)
     {
-        for (int col = 0; col < (int)m_board[row].size(); col++)
+        for(int col = 0; col < (int)m_board[row].size(); col++)
         {
             int rowCenter = Y_CENTER(row);
             int colCenter = X_CENTER(col);
-            switch (m_board[row][col])
+            switch(m_board[row][col])
             {
             case DOT:
-                drawFilledCircle(m_renderer, colCenter, rowCenter, 4, { 0xff, 0xff, 0xff, SDL_ALPHA_OPAQUE });
+                drawFilledCircle(m_renderer, colCenter, rowCenter, 4, {0xff, 0xff, 0xff, SDL_ALPHA_OPAQUE});
                 m_dotsRemaining++;
                 break;
             case SUPER_DOT:
                 m_dotsRemaining++;
-                drawFilledCircle(m_renderer, colCenter, rowCenter, 8, { 0xff, 0xff, 0xff, SDL_ALPHA_OPAQUE });
+                drawFilledCircle(m_renderer, colCenter, rowCenter, 8, {0xff, 0xff, 0xff, SDL_ALPHA_OPAQUE});
                 break;
             case BOUNDARY:
                 drawBoundary(row, col);
@@ -221,7 +228,7 @@ void GameState::drawBoundary(int row, int col)
     {
         int adjRow = row + Y_INCREMENT[dir];
         int adjCol = col + X_INCREMENT[dir];
-        if (adjRow < 0 || adjRow >= m_board.size() || adjCol < 0 || adjCol >= m_board[adjRow].size())
+        if(adjRow < 0 || adjRow >= m_board.size() || adjCol < 0 || adjCol >= m_board[adjRow].size())
         {
             continue;
         }

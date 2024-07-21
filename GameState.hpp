@@ -19,16 +19,18 @@ public:
     void handleKeypress(const SDL_Keycode keyCode);
     bool gameOver();
     void handlePacmanArrival();
+
 private:
     void drawScore();
     void drawFullBoard();
     void drawBoundary(int row, int col);
+
 private:
     BoardLayout m_board = BASE_LAYOUT;
-    Pacman m_pacman { *this };
-    std::vector<Ghost> m_ghosts { Ghost::makeGhosts(*this) };
-    PointsFruit m_fruit{ *this };
-    std::vector<DisplayFruit> m_displayFruits { DisplayFruit::makeDisplayFruits(*this) };
+    Pacman m_pacman {*this};
+    std::vector<Ghost> m_ghosts {Ghost::makeGhosts(*this)};
+    PointsFruit m_fruit {*this};
+    std::vector<DisplayFruit> m_displayFruits {DisplayFruit::makeDisplayFruits(*this)};
 
     // clang-format off
     uint64_t m_ghostSpawnIntervalTicks = 2000;

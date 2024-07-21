@@ -22,9 +22,13 @@ public:
     GridObject(GameState& gameState, int row, int col);
     virtual void update() = 0;
     virtual void reset() = 0;
-    GridPosition getPosition() const { return {m_row, m_col}; }
+    GridPosition getPosition() const
+    {
+        return {m_row, m_col};
+    }
     bool hasSamePositionAs(const GridObject& otherObject) const;
     void relocate(int row, int col);
+
 protected:
     int m_row;
     int m_col;
@@ -42,12 +46,14 @@ public:
     Mover(Mover&&) = default;
     Mover(GameState& gameState, int startRow, int startCol, Direction startFacing);
     void changeDirection(Direction newDirection);
+
 protected:
     virtual void handleArrival() {};
     virtual void handleWall() = 0;
     virtual void handleMovement();
     bool directionValid(const Direction newDirection) const;
     bool directionIsCloser(const Direction newDirection, const Mover& otherMover) const;
+
 protected:
     Direction m_facingDirection = Direction::LEFT;
     Direction m_pendingDirection = Direction::LEFT;
@@ -64,6 +70,7 @@ public:
     Pacman(GameState& gameState);
     void update() override;
     void reset() override;
+
 protected:
     void handleArrival() override;
     void handleWall() override;
@@ -84,10 +91,17 @@ public:
     Ghost() = delete;
     Ghost(Ghost&) = delete;
     Ghost(Ghost&&) = default;
-    Ghost(GameState& gameState, int startRow, int startCol, Direction startFacing, const SDL_Color& color, const std::string& name);
+    Ghost(
+        GameState& gameState,
+        int startRow,
+        int startCol,
+        Direction startFacing,
+        const SDL_Color& color,
+        const std::string& name);
     void update() override;
     void reset() override;
     void handleSuperDot();
+
 protected:
     void handleArrival() override;
     void handleWall() override;
@@ -109,13 +123,7 @@ private:
     SDL_Color m_color;
 
     int m_flashColorIndex = 0;
-    IntervalDeadlineTimer m_flashColorTimer {
-        1000,
-        true,
-        [this]() {
-            m_flashColorIndex = 1 - m_flashColorIndex;
-        }
-    };
+    IntervalDeadlineTimer m_flashColorTimer {1000, true, [this]() { m_flashColorIndex = 1 - m_flashColorIndex; }};
 
     int m_awayFromPacmanDirectionInterval = 10;
     int m_numMovesTowardPacman = 0;
@@ -132,6 +140,7 @@ public:
     DisplayFruit(DisplayFruit&&) = default;
     virtual void update() override;
     virtual void reset() override {};
+
 private:
     static inline const int FRUIT_DISPLAY_ROW = 31;
     static inline const int FRUIT_DISPLAY_START_COL = 27;
@@ -147,7 +156,11 @@ public:
     virtual void update() override;
     void reset() override;
     void activate();
-    inline bool isActive() { return m_available; }
+    inline bool isActive()
+    {
+        return m_available;
+    }
+
 private:
     static inline const int FRUIT_SPAWN_ROW = 18;
     static inline const int FRUIT_SPAWN_COL = 14;

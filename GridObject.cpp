@@ -2,10 +2,8 @@
 #include "GridObject.hpp"
 #include "util.hpp"
 
-GridObject::GridObject(GameState& gameState, int row, int col)
-: m_row(row), m_col(col), m_gameState(gameState)
+GridObject::GridObject(GameState& gameState, int row, int col) : m_row(row), m_col(col), m_gameState(gameState)
 {
-
 }
 
 bool GridObject::hasSamePositionAs(const GridObject& otherObject) const
@@ -27,17 +25,18 @@ Mover::Mover(GameState& gameState, int startRow, int startCol, Direction startFa
 
 void Mover::changeDirection(Direction newDirection)
 {
-    
-    if (directionValid(newDirection))
+    if(directionValid(newDirection))
     {
-        LOG_DEBUG("Changing pending direction (%s) -> (%s)",
+        LOG_DEBUG(
+            "Changing pending direction (%s) -> (%s)",
             DIRECTION_AS_STRING[(size_t)m_pendingDirection],
             DIRECTION_AS_STRING[(size_t)newDirection]);
         m_pendingDirection = newDirection;
     }
     else
     {
-        LOG_DEBUG("Rejected pending direction change (%s) -> (%s)",
+        LOG_DEBUG(
+            "Rejected pending direction change (%s) -> (%s)",
             DIRECTION_AS_STRING[(size_t)m_pendingDirection],
             DIRECTION_AS_STRING[(size_t)newDirection]);
     }
@@ -47,7 +46,7 @@ void Mover::handleMovement()
 {
     uint64_t currentTicks = SDL_GetTicks64();
     int numPixelsToMove = (currentTicks - m_lastDrawnTicks) * m_velocity / 1000;
-    if (numPixelsToMove == 0)
+    if(numPixelsToMove == 0)
     {
         // no changes would take place if there is no velocity
         return;
@@ -65,39 +64,49 @@ void Mover::handleMovement()
     int minYOffset = -TILE_HEIGHT / 2;
     int maxYOffset = TILE_HEIGHT / 2;
 
-    if (m_gameState.m_board[nextRow][nextCol] == BOUNDARY)
+    if(m_gameState.m_board[nextRow][nextCol] == BOUNDARY)
     {
         // restrict movement to the center of the last tile before a boundary
-        if (xIncrement == -1) minXOffset = 0;
-        if (xIncrement == 1) maxXOffset = 0;
-        if (yIncrement == -1) minYOffset = 0;
-        if (yIncrement == 1) maxYOffset = 0;
+        if(xIncrement == -1)
+            minXOffset = 0;
+        if(xIncrement == 1)
+            maxXOffset = 0;
+        if(yIncrement == -1)
+            minYOffset = 0;
+        if(yIncrement == 1)
+            maxYOffset = 0;
 
-        LOG_TRACE("%s: about to hit wall going %s, new ranges xOffset: [%d, %d] yOffset: [%d, %d]", m_name.c_str(),
-            DIRECTION_AS_STRING[(size_t)m_facingDirection], minXOffset, maxXOffset, minYOffset, maxYOffset);
+        LOG_TRACE(
+            "%s: about to hit wall going %s, new ranges xOffset: [%d, %d] yOffset: [%d, %d]",
+            m_name.c_str(),
+            DIRECTION_AS_STRING[(size_t)m_facingDirection],
+            minXOffset,
+            maxXOffset,
+            minYOffset,
+            maxYOffset);
     }
 
-    if (xIncrement != 0)
+    if(xIncrement != 0)
     {
         m_xPixelOffset += xIncrement * numPixelsToMove;
-        if (m_xPixelOffset >= minXOffset && m_xPixelOffset <= maxXOffset)
+        if(m_xPixelOffset >= minXOffset && m_xPixelOffset <= maxXOffset)
         {
             // return early if we stay on the same grid space
             return;
         }
     }
 
-    if (yIncrement != 0)
+    if(yIncrement != 0)
     {
         m_yPixelOffset += yIncrement * numPixelsToMove;
-        if (m_yPixelOffset >= minYOffset && m_yPixelOffset <= maxYOffset)
+        if(m_yPixelOffset >= minYOffset && m_yPixelOffset <= maxYOffset)
         {
             // return early if we stay on the same grid space
             return;
         }
     }
 
-    if (m_facingDirection != m_pendingDirection)
+    if(m_facingDirection != m_pendingDirection)
     {
         m_facingDirection = m_pendingDirection;
         m_xPixelOffset = 0;
@@ -105,7 +114,7 @@ void Mover::handleMovement()
         return;
     }
 
-    if (m_gameState.m_board[nextRow][nextCol] == BOUNDARY)
+    if(m_gameState.m_board[nextRow][nextCol] == BOUNDARY)
     {
         m_xPixelOffset = 0;
         m_yPixelOffset = 0;
@@ -134,11 +143,10 @@ bool Mover::directionIsCloser(const Direction newDirection, const Mover& otherMo
 {
     const size_t newDirIndex = (size_t)newDirection;
     return abs(m_row + Y_INCREMENT[newDirIndex] - otherMover.m_row) < abs(m_row - otherMover.m_row)
-        || abs(m_col + X_INCREMENT[newDirIndex] - otherMover.m_col) < abs(m_col - otherMover.m_col);
+           || abs(m_col + X_INCREMENT[newDirIndex] - otherMover.m_col) < abs(m_col - otherMover.m_col);
 }
 
-Pacman::Pacman(GameState& gameState)
-: Mover(gameState, PACMAN_START_ROW, PACMAN_START_COL, PACMAN_START_DIRECTION)
+Pacman::Pacman(GameState& gameState) : Mover(gameState, PACMAN_START_ROW, PACMAN_START_COL, PACMAN_START_DIRECTION)
 {
     m_velocity = 200;
     m_name = "pacman";
@@ -147,7 +155,8 @@ Pacman::Pacman(GameState& gameState)
 void Pacman::update()
 {
     handleMovement();
-    drawFilledCircle(m_gameState.m_renderer, X_CENTER(m_col) + m_xPixelOffset, Y_CENTER(m_row) + m_yPixelOffset, RADIUS, COLOR);
+    drawFilledCircle(
+        m_gameState.m_renderer, X_CENTER(m_col) + m_xPixelOffset, Y_CENTER(m_row) + m_yPixelOffset, RADIUS, COLOR);
 }
 
 void Pacman::handleArrival()
@@ -173,12 +182,19 @@ std::vector<Ghost> Ghost::makeGhosts(GameState& gameState)
     ghosts.reserve(NUM_GHOSTS);
     ghosts.emplace_back(gameState, GHOST_START_ROW, GHOST_START_COL + 0, GHOST_START_DIRECTION, COLOR_RED, "Blinky");
     ghosts.emplace_back(gameState, GHOST_START_ROW, GHOST_START_COL + 1, GHOST_START_DIRECTION, COLOR_PINK, "Pinky");
-    ghosts.emplace_back(gameState, GHOST_START_ROW, GHOST_START_COL + 2, GHOST_START_DIRECTION, COLOR_TURQUOISE, "Inky");
+    ghosts.emplace_back(
+        gameState, GHOST_START_ROW, GHOST_START_COL + 2, GHOST_START_DIRECTION, COLOR_TURQUOISE, "Inky");
     ghosts.emplace_back(gameState, GHOST_START_ROW, GHOST_START_COL + 3, GHOST_START_DIRECTION, COLOR_ORANGE, "Clyde");
     return ghosts;
 }
 
-Ghost::Ghost(GameState& gameState, int startRow, int startCol, Direction startFacing, const SDL_Color& color, const std::string& name)
+Ghost::Ghost(
+    GameState& gameState,
+    int startRow,
+    int startCol,
+    Direction startFacing,
+    const SDL_Color& color,
+    const std::string& name)
 : Mover(gameState, startRow, startCol, startFacing), m_color(color), m_index(nextIndex++)
 {
     m_name = name;
@@ -221,18 +237,18 @@ void Ghost::update()
     const int SCALING_FACTOR = 2;
     std::vector<std::string> scaledGhost;
 
-    for (const auto& line : GHOST_GRID)
+    for(const auto& line : GHOST_GRID)
     {
         std::string newString;
-        for (const auto& c : line)
+        for(const auto& c : line)
         {
-            for (int i = 0; i < SCALING_FACTOR; i++)
+            for(int i = 0; i < SCALING_FACTOR; i++)
             {
                 newString += c;
             }
         }
 
-        for (int i = 0; i < SCALING_FACTOR; i++)
+        for(int i = 0; i < SCALING_FACTOR; i++)
         {
             scaledGhost.push_back(newString);
         }
@@ -263,12 +279,12 @@ void Ghost::handleWall()
 
 void Ghost::handleArrival()
 {
-    for (size_t newDirIndex = 0; newDirIndex < (size_t)Direction::MAX; newDirIndex++)
+    for(size_t newDirIndex = 0; newDirIndex < (size_t)Direction::MAX; newDirIndex++)
     {
         Direction newDirection = (Direction)newDirIndex;
-        if (directionValid(newDirection))
+        if(directionValid(newDirection))
         {
-            if (directionIsCloser(newDirection, m_gameState.m_pacman))
+            if(directionIsCloser(newDirection, m_gameState.m_pacman))
             {
                 if(m_numMovesTowardPacman < m_awayFromPacmanDirectionInterval)
                 {
@@ -331,8 +347,7 @@ void DisplayFruit::update()
     SDL_RenderFillRect(m_gameState.m_renderer, &rect);
 }
 
-PointsFruit::PointsFruit(GameState& gameState)
-: DisplayFruit(gameState, -1)
+PointsFruit::PointsFruit(GameState& gameState) : DisplayFruit(gameState, -1)
 {
     m_row = FRUIT_SPAWN_ROW;
     m_col = FRUIT_SPAWN_COL;
