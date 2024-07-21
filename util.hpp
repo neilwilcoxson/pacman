@@ -17,7 +17,16 @@ struct SDL_Renderer;
 
 #define activeLevel LOG_LEVEL_INFO
 
-// TODO variadic macros don't work for string only with GCC
+// GNU C++ doesn't handle empty __VA_ARGS__ the same as MSVC
+#ifdef __GNUG__
+#define LOG_AT_LEVEL(level, format, ...) if(activeLevel >= level) printf("[%s] %s:%d: " format "\n", #level, __FILE__, __LINE__, ##__VA_ARGS__)
+#define LOG_TRACE(format, ...) LOG_AT_LEVEL(LOG_LEVEL_TRACE, format, ##__VA_ARGS__)
+#define LOG_DEBUG(format, ...) LOG_AT_LEVEL(LOG_LEVEL_DEBUG, format, ##__VA_ARGS__)
+#define LOG_INFO(format, ...) LOG_AT_LEVEL(LOG_LEVEL_INFO, format, ##__VA_ARGS__)
+#define LOG_WARN(format, ...) LOG_AT_LEVEL(LOG_LEVEL_WARN, format, ##__VA_ARGS__)
+#define LOG_ERROR(format, ...) LOG_AT_LEVEL(LOG_LEVEL_ERROR, format, ##__VA_ARGS__)
+#define LOG_ASSERT(condition, format, ...) if(!(condition)) { LOG_AT_LEVEL(LOG_LEVEL_ASSERT, #condition " fails, " format, ##__VA_ARGS__); exit(EXIT_FAILURE); }
+# else
 #define LOG_AT_LEVEL(level, format, ...) if(activeLevel >= level) printf("[%s] %s:%d: " format "\n", #level, __FILE__, __LINE__, __VA_ARGS__)
 #define LOG_TRACE(format, ...) LOG_AT_LEVEL(LOG_LEVEL_TRACE, format, __VA_ARGS__)
 #define LOG_DEBUG(format, ...) LOG_AT_LEVEL(LOG_LEVEL_DEBUG, format, __VA_ARGS__)
@@ -25,6 +34,7 @@ struct SDL_Renderer;
 #define LOG_WARN(format, ...) LOG_AT_LEVEL(LOG_LEVEL_WARN, format, __VA_ARGS__)
 #define LOG_ERROR(format, ...) LOG_AT_LEVEL(LOG_LEVEL_ERROR, format, __VA_ARGS__)
 #define LOG_ASSERT(condition, format, ...) if(!(condition)) { LOG_AT_LEVEL(LOG_LEVEL_ASSERT, #condition " fails, " format, __VA_ARGS__); exit(EXIT_FAILURE); }
+#endif
 
 const int X_INCREMENT[] = { 0, 0, -1, 1, 0 };
 const int Y_INCREMENT[] = { -1, 1, 0, 0, 0 };
