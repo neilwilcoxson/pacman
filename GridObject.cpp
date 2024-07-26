@@ -45,7 +45,7 @@ void Mover::changeDirection(Direction newDirection)
 void Mover::handleMovement()
 {
     uint64_t currentTicks = SDL_GetTicks64();
-    int numPixelsToMove = (currentTicks - m_lastDrawnTicks) * m_velocity / 1000;
+    int numPixelsToMove = (int)(currentTicks - m_lastDrawnTicks) * m_velocity / 1000;
     if(numPixelsToMove == 0)
     {
         // no changes would take place if there is no velocity
@@ -126,8 +126,8 @@ void Mover::handleMovement()
     m_col = nextCol;
 
     // adjust pixel offset to be relative to the new row and column
-    m_xPixelOffset = xIncrement * (m_xPixelOffset - maxXOffset + minXOffset);
-    m_yPixelOffset = yIncrement * (m_yPixelOffset - maxYOffset + minYOffset);
+    m_xPixelOffset -= xIncrement * (maxXOffset - minXOffset);
+    m_yPixelOffset -= yIncrement * (maxYOffset - minYOffset);
 
     handleArrival();
 }
@@ -148,7 +148,7 @@ bool Mover::directionIsCloser(const Direction newDirection, const Mover& otherMo
 
 Pacman::Pacman(GameState& gameState) : Mover(gameState, PACMAN_START_ROW, PACMAN_START_COL, PACMAN_START_DIRECTION)
 {
-    m_velocity = 200;
+    m_velocity = 300;
     m_name = "pacman";
 }
 
@@ -198,7 +198,7 @@ Ghost::Ghost(
 : Mover(gameState, startRow, startCol, startFacing), m_color(color), m_index(nextIndex++)
 {
     m_name = name;
-    m_velocity = 50;
+    m_velocity = 100;
     m_awayFromPacmanDirectionInterval += m_index;
 }
 
@@ -258,14 +258,14 @@ void Ghost::update()
 
     for(int row = 0; row < scaledGhost.size(); row++)
     {
-        for(int col = 0; col < scaledGhost[0].size(); col++)
+        for(int col = 0; col < scaledGhost[row].length(); col++)
         {
             if(scaledGhost[row][col] == 'x')
             {
                 SDL_RenderDrawPoint(
                     m_gameState.m_renderer,
-                    X_CENTER(m_col) + m_xPixelOffset + col - scaledGhost.size() / 2,
-                    Y_CENTER(m_row) + m_yPixelOffset + row - scaledGhost.size() / 2);
+                    X_CENTER(m_col) + m_xPixelOffset + col - (int)scaledGhost[row].length() / 2,
+                    Y_CENTER(m_row) + m_yPixelOffset + row - (int)scaledGhost.size() / 2);
             }
         }
     }
@@ -289,14 +289,14 @@ void Ghost::handleArrival()
                 if(m_numMovesTowardPacman < m_awayFromPacmanDirectionInterval)
                 {
                     m_numMovesTowardPacman++;
-                    m_pendingDirection = m_facingDirection = newDirection;
+                    m_pendingDirection = newDirection;
                     return;
                 }
             }
             else if(m_numMovesTowardPacman >= m_awayFromPacmanDirectionInterval)
             {
                 m_numMovesTowardPacman = 0;
-                m_pendingDirection = m_facingDirection = newDirection;
+                m_pendingDirection = newDirection;
                 return;
             }
         }

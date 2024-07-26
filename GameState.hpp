@@ -70,10 +70,12 @@ private:
     int m_normalDotPoints = 10;
     int m_superDotPoints = 100;
 
-    uint64_t m_score = 0;
+    int m_score = 0;
     int m_lives = 3;
     int m_level = 1;
     int m_dotsRemaining = 1;
+    int m_extraLifeThreshold = 10'000;
+    int m_extraLivesIncrement = 10'000;
 
     // tracking for fruit
     int m_dotsEaten = 0;

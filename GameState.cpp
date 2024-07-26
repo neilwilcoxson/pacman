@@ -19,6 +19,37 @@ void GameState::update()
         LOG_INFO("Level: %d", m_level);
     }
 
+    if(m_score >= m_extraLifeThreshold)
+    {
+        m_lives++;
+        m_extraLifeThreshold += m_extraLivesIncrement;
+        LOG_INFO("Earned extra life, lives %d", m_lives);
+    }
+
+    for(auto& ghost : m_ghosts)
+    {
+        if(m_pacman.hasSamePositionAs(ghost))
+        {
+            if(ghost.m_isFlashing)
+            {
+                m_score += m_flashingGhostPoints;
+                m_flashingGhostPoints *= 2;
+                ghost.reset();
+            }
+            else
+            {
+                LOG_INFO("Found a ghost, lose a life: %d -> %d", m_lives, m_lives - 1);
+                m_lives--;
+
+                m_pacman.reset();
+                for(auto& ghost : m_ghosts)
+                {
+                    ghost.reset();
+                }
+            }
+        }
+    }
+
     m_ghostSpawnTimer.check();
     m_flashingGhostTimer.check();
 
@@ -92,31 +123,6 @@ void GameState::handlePacmanArrival()
             m_pacman.changeDirection(Direction::RIGHT);
     }
 
-    for(auto& ghost : m_ghosts)
-    {
-        // TODO pacman doesn't die unless he is moving
-        if(m_pacman.hasSamePositionAs(ghost))
-        {
-            if(ghost.m_isFlashing)
-            {
-                m_score += m_flashingGhostPoints;
-                m_flashingGhostPoints *= 2;
-                ghost.reset();
-            }
-            else
-            {
-                LOG_INFO("Found a ghost, lose a life: %d -> %d", m_lives, m_lives - 1);
-                m_lives--;
-
-                m_pacman.reset();
-                for(auto& ghost : m_ghosts)
-                {
-                    ghost.reset();
-                }
-            }
-        }
-    }
-
     if(m_fruit.isActive() && m_pacman.hasSamePositionAs(m_fruit))
     {
         m_score += m_fruitPoints;
@@ -155,7 +161,7 @@ void GameState::handlePacmanArrival()
         m_fruitThreshold += m_fruitThresholdIncrement;
     }
 
-    LOG_INFO("Score: %llu", m_score);
+    LOG_INFO("Score: %d", m_score);
 }
 
 void GameState::drawScore()
