@@ -167,7 +167,8 @@ void GameState::handlePacmanArrival()
 
 void GameState::drawScore()
 {
-    displayNumber(m_renderer, 300, 10, m_score, COLOR_WHITE);
+    displayString(m_renderer, 150, 6, "1 UP", COLOR_TURQUOISE);
+    displayNumber(m_renderer, 150 + 4 * 16, 24, m_score, COLOR_WHITE);
 }
 
 void GameState::drawFullBoard()
