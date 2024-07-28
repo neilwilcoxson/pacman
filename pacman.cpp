@@ -21,7 +21,7 @@ int main(int argc, char** argv)
     GameState gameState(renderer);
 
     SDL_Event e;
-    while(!gameState.gameOver())
+    while(true)
     {
         if(SDL_PollEvent(&e))
         {

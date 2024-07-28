@@ -8,6 +8,7 @@ GameState::GameState(SDL_Renderer* renderer) : m_renderer(renderer)
 {
     LOG_INFO("Constructing GameState");
     m_ghostSpawnTimer.start();
+    m_readyTimer.start();
 }
 
 void GameState::update()
@@ -25,6 +26,24 @@ void GameState::update()
         m_lives++;
         m_extraLifeThreshold += m_extraLivesIncrement;
         LOG_INFO("Earned extra life, lives %d", m_lives);
+    }
+
+    // draw stationary elements
+    SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 0xff);
+    SDL_RenderClear(m_renderer);
+    drawScore();
+    drawFullBoard();
+
+    for(size_t levelFruitIndex = 0; levelFruitIndex < m_level; levelFruitIndex++)
+    {
+        size_t index = levelFruitIndex >= m_displayFruits.size() ? (m_displayFruits.size() - 1) : levelFruitIndex;
+        m_displayFruits[index].update();
+    }
+
+    if(gameOver())
+    {
+        displayString(m_renderer, 720 / 2 - (16 * 9) / 2, 550, "GAME OVER", COLOR_YELLOW);
+        goto finishRender;
     }
 
     for(auto& ghost : m_ghosts)
@@ -53,12 +72,12 @@ void GameState::update()
 
     m_ghostSpawnTimer.check();
     m_flashingGhostTimer.check();
+    m_readyTimer.check();
 
-    // draw stationary elements
-    SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 0xff);
-    SDL_RenderClear(m_renderer);
-    drawScore();
-    drawFullBoard();
+    if(m_readyDisplayed)
+    {
+        displayString(m_renderer, 720 / 2 - (16 * 5) / 2, 550, "READY", COLOR_YELLOW);
+    }
 
     static const int LIFE_DISPLAY_PADDING = 10;
 
@@ -72,23 +91,21 @@ void GameState::update()
             Pacman::RADIUS);
     }
 
-    for(size_t levelFruitIndex = 0; levelFruitIndex < m_level; levelFruitIndex++)
-    {
-        size_t index = levelFruitIndex >= m_displayFruits.size() ? (m_displayFruits.size() - 1) : levelFruitIndex;
-        m_displayFruits[index].update();
-    }
-
     // draw points claimable fruit if it is active
     m_fruit.update();
 
     // draw moving elements
-    m_pacman.update();
+    if(m_activePlay)
+    {
+        m_pacman.update();
+    }
 
     for(auto& ghost : m_ghosts)
     {
         ghost.update();
     }
 
+finishRender:
     SDL_RenderPresent(m_renderer);
 }
 

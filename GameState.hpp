@@ -32,7 +32,21 @@ private:
     PointsFruit m_fruit {*this};
     std::vector<DisplayFruit> m_displayFruits {DisplayFruit::makeDisplayFruits(*this)};
 
+    bool m_readyDisplayed = true;
+    bool m_activePlay = false;
+
     // clang-format off
+    uint64_t readyTimerLengthTicks = 3000;
+    IntervalDeadlineTimer m_readyTimer {
+        readyTimerLengthTicks,
+        false,
+        [this]() {
+            m_readyDisplayed = false;
+            m_activePlay = true;
+            m_pacman.reset();
+        }
+    };
+
     uint64_t m_ghostSpawnIntervalTicks = 2000;
     IntervalDeadlineTimer m_ghostSpawnTimer {
         m_ghostSpawnIntervalTicks,

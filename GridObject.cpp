@@ -212,6 +212,7 @@ void Pacman::reset()
     m_row = PACMAN_START_ROW;
     m_col = PACMAN_START_COL;
     m_facingDirection = PACMAN_START_DIRECTION;
+    m_lastDrawnTicks = SDL_GetTicks64();
 }
 
 std::vector<Ghost> Ghost::makeGhosts(GameState& gameState)
