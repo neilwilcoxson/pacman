@@ -12,7 +12,7 @@ add_executable(pacman pacman.cpp)
 target_compile_features(pacman PUBLIC cxx_std_17)
 target_include_directories(pacman PRIVATE ${SDL2_INCLUDE_DIRS})
 target_link_libraries(pacman PRIVATE ${SDL2_LIBRARIES})
-target_sources(pacman PRIVATE GameState.cpp GridObject.cpp util.cpp)
+target_sources(pacman PRIVATE GameState.cpp GridObject.cpp util.cpp font.cpp)
 
 add_custom_target(format
     COMMAND clang-format -i ${PROJECT_SOURCE_DIR}/*.cpp ${PROJECT_SOURCE_DIR}/*.hpp

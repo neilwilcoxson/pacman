@@ -1,6 +1,7 @@
 #include <SDL.h>
 
 #include "GameState.hpp"
+#include "font.hpp"
 #include "util.hpp"
 
 GameState::GameState(SDL_Renderer* renderer) : m_renderer(renderer)
@@ -166,34 +167,7 @@ void GameState::handlePacmanArrival()
 
 void GameState::drawScore()
 {
-    static const int SCOREBOARD_RIGHT_EDGE_X = 300;
-    static const int SCOREBOARD_TOP_EDGE_Y = 10;
-    static const int DIGIT_WIDTH = (int)NUMERAL_DIGITS[0][0].length();
-    static const int DIGIT_HEIGHT = (int)NUMERAL_DIGITS[0].size();
-    static const SDL_Color COLOR = COLOR_WHITE;
-
-    SDL_SetRenderDrawColor(m_renderer, COLOR.r, COLOR.g, COLOR.b, COLOR.a);
-
-    int currentRightEdgeX = SCOREBOARD_RIGHT_EDGE_X;
-
-    for(uint64_t remainingScore = m_score; remainingScore != 0; remainingScore /= 10)
-    {
-        const auto& digitGrid = NUMERAL_DIGITS[remainingScore % 10];
-        for(int lineNumber = 0; lineNumber < DIGIT_HEIGHT; lineNumber++)
-        {
-            for(int pixelNumber = 0; pixelNumber < DIGIT_WIDTH; pixelNumber++)
-            {
-                if(digitGrid[lineNumber][pixelNumber] == 'x')
-                {
-                    SDL_RenderDrawPoint(
-                        m_renderer,
-                        currentRightEdgeX - (DIGIT_WIDTH - pixelNumber),
-                        SCOREBOARD_TOP_EDGE_Y + lineNumber);
-                }
-            }
-        }
-        currentRightEdgeX -= DIGIT_WIDTH;
-    }
+    displayNumber(m_renderer, 300, 10, m_score, COLOR_WHITE);
 }
 
 void GameState::drawFullBoard()
