@@ -155,8 +155,36 @@ Pacman::Pacman(GameState& gameState) : Mover(gameState, PACMAN_START_ROW, PACMAN
 void Pacman::update()
 {
     handleMovement();
-    drawFilledCircle(
-        m_gameState.m_renderer, X_CENTER(m_col) + m_xPixelOffset, Y_CENTER(m_row) + m_yPixelOffset, RADIUS, COLOR);
+
+    SDL_SetRenderDrawColor(m_gameState.m_renderer, COLOR.r, COLOR.g, COLOR.b, COLOR.a);
+
+    int xCenter = X_CENTER(m_col) + m_xPixelOffset;
+    int yCenter = Y_CENTER(m_row) + m_yPixelOffset;
+    int xIncrement = X_INCREMENT[(size_t)m_facingDirection];
+    int yIncrement = Y_INCREMENT[(size_t)m_facingDirection];
+    for(int x = 0; x < RADIUS * 2; x++)
+    {
+        for(int y = 0; y < RADIUS * 2; y++)
+        {
+            int dx = RADIUS - x;
+            int dy = RADIUS - y;
+            if(dx * dx + dy * dy <= RADIUS * RADIUS)
+            {
+                if(dy * yIncrement >= 0 && dx * xIncrement < m_mouthPixels && abs(dy) > abs(dx) && yIncrement != 0
+                   || dx * xIncrement >= 0 && dy * yIncrement < m_mouthPixels && abs(dx) > abs(dy) && xIncrement != 0)
+                {
+                    continue;
+                }
+                SDL_RenderDrawPoint(m_gameState.m_renderer, xCenter + dx, yCenter + dy);
+            }
+        }
+    }
+
+    if(abs(m_mouthPixels) >= RADIUS)
+    {
+        m_mouthIncrement *= -1;
+    }
+    m_mouthPixels += m_mouthIncrement;
 }
 
 void Pacman::handleArrival()
