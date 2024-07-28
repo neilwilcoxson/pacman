@@ -146,6 +146,36 @@ bool Mover::directionIsCloser(const Direction newDirection, const Mover& otherMo
            || abs(m_col + X_INCREMENT[newDirIndex] - otherMover.m_col) < abs(m_col - otherMover.m_col);
 }
 
+void Pacman::drawPacman(
+    SDL_Renderer* renderer,
+    const int xCenter,
+    const int yCenter,
+    const Direction facingDirection,
+    const int mouthPixels)
+{
+    SDL_SetRenderDrawColor(renderer, COLOR.r, COLOR.g, COLOR.b, COLOR.a);
+
+    int xIncrement = X_INCREMENT[(size_t)facingDirection];
+    int yIncrement = Y_INCREMENT[(size_t)facingDirection];
+    for(int x = 0; x < RADIUS * 2; x++)
+    {
+        for(int y = 0; y < RADIUS * 2; y++)
+        {
+            int dx = RADIUS - x;
+            int dy = RADIUS - y;
+            if(dx * dx + dy * dy <= RADIUS * RADIUS)
+            {
+                if(dy * yIncrement >= 0 && dx * xIncrement < mouthPixels && abs(dy) > abs(dx) && yIncrement != 0
+                   || dx * xIncrement >= 0 && dy * yIncrement < mouthPixels && abs(dx) > abs(dy) && xIncrement != 0)
+                {
+                    continue;
+                }
+                SDL_RenderDrawPoint(renderer, xCenter + dx, yCenter + dy);
+            }
+        }
+    }
+}
+
 Pacman::Pacman(GameState& gameState) : Mover(gameState, PACMAN_START_ROW, PACMAN_START_COL, PACMAN_START_DIRECTION)
 {
     m_velocity = 300;
@@ -156,29 +186,9 @@ void Pacman::update()
 {
     handleMovement();
 
-    SDL_SetRenderDrawColor(m_gameState.m_renderer, COLOR.r, COLOR.g, COLOR.b, COLOR.a);
-
     int xCenter = X_CENTER(m_col) + m_xPixelOffset;
     int yCenter = Y_CENTER(m_row) + m_yPixelOffset;
-    int xIncrement = X_INCREMENT[(size_t)m_facingDirection];
-    int yIncrement = Y_INCREMENT[(size_t)m_facingDirection];
-    for(int x = 0; x < RADIUS * 2; x++)
-    {
-        for(int y = 0; y < RADIUS * 2; y++)
-        {
-            int dx = RADIUS - x;
-            int dy = RADIUS - y;
-            if(dx * dx + dy * dy <= RADIUS * RADIUS)
-            {
-                if(dy * yIncrement >= 0 && dx * xIncrement < m_mouthPixels && abs(dy) > abs(dx) && yIncrement != 0
-                   || dx * xIncrement >= 0 && dy * yIncrement < m_mouthPixels && abs(dx) > abs(dy) && xIncrement != 0)
-                {
-                    continue;
-                }
-                SDL_RenderDrawPoint(m_gameState.m_renderer, xCenter + dx, yCenter + dy);
-            }
-        }
-    }
+    drawPacman(m_gameState.m_renderer, xCenter, yCenter, m_facingDirection, m_mouthPixels);
 
     if(abs(m_mouthPixels) >= RADIUS)
     {

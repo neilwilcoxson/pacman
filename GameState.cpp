@@ -60,6 +60,18 @@ void GameState::update()
     drawScore();
     drawFullBoard();
 
+    static const int LIFE_DISPLAY_PADDING = 10;
+
+    for(int displayLife = 0; displayLife < m_lives; displayLife++)
+    {
+        Pacman::drawPacman(
+            m_renderer,
+            X_CENTER(1 + displayLife) + LIFE_DISPLAY_PADDING * displayLife,
+            Y_CENTER(31),
+            Direction::LEFT,
+            Pacman::RADIUS);
+    }
+
     for(size_t levelFruitIndex = 0; levelFruitIndex < m_level; levelFruitIndex++)
     {
         size_t index = levelFruitIndex >= m_displayFruits.size() ? (m_displayFruits.size() - 1) : levelFruitIndex;

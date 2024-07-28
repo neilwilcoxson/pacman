@@ -64,6 +64,14 @@ protected:
 class Pacman : public Mover
 {
 public:
+    static inline const int RADIUS = 14;
+    static void drawPacman(
+        SDL_Renderer* renderer,
+        const int xCenter,
+        const int yCenter,
+        const Direction facingDirection,
+        const int mouthPixels);
+
     Pacman() = delete;
     Pacman(Pacman&) = delete;
     Pacman(Pacman&&) = default;
@@ -80,7 +88,6 @@ private:
     static inline const int PACMAN_START_COL = 14;
     static inline const Direction PACMAN_START_DIRECTION = Direction::LEFT;
     static inline const SDL_Color COLOR = COLOR_YELLOW;
-    static inline const int RADIUS = 14;
 
     int m_mouthPixels = 0;
     int m_mouthIncrement = 1;
