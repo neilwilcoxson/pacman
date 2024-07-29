@@ -28,6 +28,11 @@ void GameState::update()
         LOG_INFO("Earned extra life, lives %d", m_lives);
     }
 
+    if(m_score > m_highScore)
+    {
+        m_highScore = m_score;
+    }
+
     // draw stationary elements
     SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 0xff);
     SDL_RenderClear(m_renderer);
@@ -196,8 +201,14 @@ void GameState::handlePacmanArrival()
 
 void GameState::drawScore()
 {
-    displayString(m_renderer, 150, 6, "1 UP", COLOR_TURQUOISE);
-    displayNumber(m_renderer, 150 + 4 * 16, 24, m_score, COLOR_WHITE);
+    const int SCOREBOARD_TEXT_START_X = 150;
+    const int SCOREBOARD_TEXT_Y = 6;
+    const int SCOREBOARD_NUMBER_Y = 24;
+    const int CHAR_WIDTH = 16;
+    displayString(m_renderer, SCOREBOARD_TEXT_START_X, SCOREBOARD_TEXT_Y, "1 UP", COLOR_TURQUOISE);
+    displayNumber(m_renderer, SCOREBOARD_TEXT_START_X + 4 * CHAR_WIDTH, SCOREBOARD_NUMBER_Y, m_score, COLOR_WHITE);
+    displayString(m_renderer, SCOREBOARD_TEXT_START_X + 10 * CHAR_WIDTH, SCOREBOARD_TEXT_Y, "HIGH SCORE", COLOR_WHITE);
+    displayNumber(m_renderer, SCOREBOARD_TEXT_START_X + 19 * CHAR_WIDTH, SCOREBOARD_NUMBER_Y, m_highScore, COLOR_WHITE);
 }
 
 void GameState::drawFullBoard()

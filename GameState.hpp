@@ -84,6 +84,7 @@ private:
     int m_normalDotPoints = 10;
     int m_superDotPoints = 100;
 
+    int m_highScore = 10'000;
     int m_score = 0;
     int m_lives = 3;
     int m_level = 1;
