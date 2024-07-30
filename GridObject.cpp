@@ -355,30 +355,9 @@ void Ghost::handleSuperDot()
     m_flashColorTimer.start();
 }
 
-std::vector<DisplayFruit> DisplayFruit::makeDisplayFruits(GameState& gameState)
-{
-    int index = 0;
-    std::vector<DisplayFruit> displayFruits;
-    displayFruits.reserve(4);
-    displayFruits.emplace_back(gameState, index++);
-    displayFruits.emplace_back(gameState, index++);
-    displayFruits.emplace_back(gameState, index++);
-    displayFruits.emplace_back(gameState, index++);
-    // TODO add additional fruits
-    return displayFruits;
-}
-
-DisplayFruit::DisplayFruit(GameState& gameState, int index)
-: GridObject(gameState, FRUIT_DISPLAY_ROW, FRUIT_DISPLAY_START_COL - index), m_index(index)
-{
-    m_name = std::string("fruit ") + std::to_string(index);
-    m_xPixelOffset = -2 * index;
-}
-
-static const int FRUIT_WIDTH = 12;
-static const int FRUIT_HEIGHT = 12;
 static const std::string FRUIT_SPRITES =
     // cherry
+    "            "
     "          BB"
     "        BBBB"
     "      BB B  "
@@ -392,6 +371,7 @@ static const std::string FRUIT_SPRITES =
     "     RRWRRR "
     "      RRRR  "
     // strawberry
+    "            "
     "      W     "
     "   GGGWGGG  "
     "  RRGGGGGRR "
@@ -404,7 +384,8 @@ static const std::string FRUIT_SPRITES =
     "   RRWRRW   "
     "    RRRRR   "
     "      R     "
-    // peach
+    // orange
+    "            "
     "       GG   "
     "     BGGGGG "
     "     B GGG  "
@@ -418,6 +399,7 @@ static const std::string FRUIT_SPRITES =
     " TTTTTTTTTT "
     "  TTTTTTTT  "
     // apple
+    "            "
     "      B     "
     " RRR B RRR  "
     "RRRRRBRRRRR "
@@ -429,10 +411,97 @@ static const std::string FRUIT_SPRITES =
     " RRRRRRRWRR "
     " RRRRRRRRRR "
     "  RRRRRRRR  "
-    "   RR RRR   ";
+    "   RR RRR   "
+    // melon
+    "   t        "
+    "    ttttt   "
+    "      t     "
+    "     GWG    "
+    "   GGGtGGG  "
+    "  GtWtGGGtG "
+    "  GGtGGWtGG "
+    " GWtGGGtGtGG"
+    " GtGGWtGGWtG"
+    "  GGtWtWtGG "
+    "  GGGtGGGtG "
+    "   GtGGGtG  "
+    "     GGt    "
+    // galaxian
+    "            "
+    "      R     "
+    " u   RRR   u"
+    " u  RRRRR  u"
+    " uYRRYRYRRYu"
+    " uYYYYRYYYYu"
+    " uuYYYYYYYuu"
+    "  uuY Y Yuu "
+    "   uu Y uu  "
+    "    u Y u   "
+    "      Y     "
+    "      Y     "
+    "            "
+    // bell
+    "     YY     "
+    "   YY  YY   "
+    "  YYYYYYYY  "
+    "  YY YYYYY  "
+    "  Y YYYYYY  "
+    " YY YYYYYYY "
+    " YY YYYYYYY "
+    " YYYYYYYYYY "
+    "YY YYYYYYYYY"
+    "YY YYYYYYYYY"
+    "YYYYYYYYYYYY"
+    "YbbbbbWWbbbY"
+    " bbbbbWWbbb "
+    // key
+    "            "
+    "     bbb    "
+    "   bb   bb  "
+    "   bbbbbbb  "
+    "   bbbbbbb  "
+    "     W W    "
+    "     W WW   "
+    "     W W    "
+    "     W      "
+    "     W W    "
+    "     W WW   "
+    "     W W    "
+    "      W     ";
+static const int FRUIT_WIDTH = 12;
+static const int FRUIT_HEIGHT = 13;
+const int MAX_FRUIT = (int)FRUIT_SPRITES.length() / (FRUIT_HEIGHT * FRUIT_WIDTH);
 
 static const std::unordered_map<char, SDL_Color> COLOR_MAP = {
-    {'B', COLOR_BROWN}, {'G', COLOR_GREEN}, {'R', COLOR_RED}, {'T', COLOR_TAN}, {'W', COLOR_WHITE}};
+    {'B', COLOR_BROWN},
+    {'G', COLOR_GREEN},
+    {'R', COLOR_RED},
+    {'T', COLOR_TAN},
+    {'W', COLOR_WHITE},
+    {'Y', COLOR_YELLOW},
+    {'b', COLOR_BABY_BLUE},
+    {'t', COLOR_TURQUOISE},
+    {'u', COLOR_BLUE}};
+
+std::vector<DisplayFruit> DisplayFruit::makeDisplayFruits(GameState& gameState)
+{
+    int index = 0;
+    std::vector<DisplayFruit> displayFruits;
+    displayFruits.reserve(MAX_FRUIT);
+    for(int i = 0; i < MAX_FRUIT; i++)
+    {
+        displayFruits.emplace_back(gameState, index++);
+    }
+
+    return displayFruits;
+}
+
+DisplayFruit::DisplayFruit(GameState& gameState, int index)
+: GridObject(gameState, FRUIT_DISPLAY_ROW, FRUIT_DISPLAY_START_COL - index), m_index(index)
+{
+    m_name = std::string("fruit ") + std::to_string(index);
+    m_xPixelOffset = -2 * index;
+}
 
 void DisplayFruit::update()
 {
@@ -476,7 +545,6 @@ void PointsFruit::update()
 
     if(m_available)
     {
-        const int MAX_FRUIT = (int)FRUIT_SPRITES.length() / (FRUIT_HEIGHT * FRUIT_WIDTH);
         m_index = m_gameState.m_level - 1;
         if(m_index >= MAX_FRUIT)
         {
