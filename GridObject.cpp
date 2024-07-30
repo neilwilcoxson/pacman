@@ -360,30 +360,108 @@ std::vector<DisplayFruit> DisplayFruit::makeDisplayFruits(GameState& gameState)
     int index = 0;
     std::vector<DisplayFruit> displayFruits;
     displayFruits.reserve(4);
-    // TODO implement different fruits
     displayFruits.emplace_back(gameState, index++);
     displayFruits.emplace_back(gameState, index++);
     displayFruits.emplace_back(gameState, index++);
     displayFruits.emplace_back(gameState, index++);
+    // TODO add additional fruits
     return displayFruits;
 }
 
 DisplayFruit::DisplayFruit(GameState& gameState, int index)
-: GridObject(gameState, FRUIT_DISPLAY_ROW, FRUIT_DISPLAY_START_COL - index)
+: GridObject(gameState, FRUIT_DISPLAY_ROW, FRUIT_DISPLAY_START_COL - index), m_index(index)
 {
     m_name = std::string("fruit ") + std::to_string(index);
+    m_xPixelOffset = -2 * index;
 }
+
+static const int FRUIT_WIDTH = 12;
+static const int FRUIT_HEIGHT = 12;
+static const std::string FRUIT_SPRITES =
+    // cherry
+    "          BB"
+    "        BBBB"
+    "      BB B  "
+    "     B   B  "
+    " RRRB   B   "
+    "RRRBRR B    "
+    "RRRRR RBR   "
+    "RWRR RRBRRR "
+    "RRWR RRRRRR "
+    " RRR RWRRRR "
+    "     RRWRRR "
+    "      RRRR  "
+    // strawberry
+    "      W     "
+    "   GGGWGGG  "
+    "  RRGGGGGRR "
+    " RRRRRGRRRRR"
+    " RWRRRRRWRRR"
+    " RRRWRWRRRRR"
+    " RRRRRRRRWRR"
+    "  RWRRWRRRRR"
+    "  RRRRRRRRR "
+    "   RRWRRW   "
+    "    RRRRR   "
+    "      R     "
+    // peach
+    "       GG   "
+    "     BGGGGG "
+    "     B GGG  "
+    "  TTBBBTTT  "
+    " TTTTBTTTTT "
+    "TTTTTTTTTTTT"
+    "TTTTTTTTTTTT"
+    "TTTTTTTTTTTT"
+    "TTTTTTTTTTTT"
+    " TTTTTTTTTT "
+    " TTTTTTTTTT "
+    "  TTTTTTTT  "
+    // apple
+    "      B     "
+    " RRR B RRR  "
+    "RRRRRBRRRRR "
+    "RRRRRRRRRRRR"
+    "RRRRRRRRRRRR"
+    "RRRRRRRRRRRR"
+    "RRRRRRRRRWRR"
+    "RRRRRRRRRWRR"
+    " RRRRRRRWRR "
+    " RRRRRRRRRR "
+    "  RRRRRRRR  "
+    "   RR RRR   ";
+
+static const std::unordered_map<char, SDL_Color> COLOR_MAP = {
+    {'B', COLOR_BROWN}, {'G', COLOR_GREEN}, {'R', COLOR_RED}, {'T', COLOR_TAN}, {'W', COLOR_WHITE}};
 
 void DisplayFruit::update()
 {
-    SDL_Rect rect;
-    rect.h = 20;
-    rect.w = 20;
-    rect.x = X_CENTER(m_col) + m_xPixelOffset - rect.w / 2;
-    rect.y = Y_CENTER(m_row) + m_yPixelOffset - rect.h / 2;
-    SDL_Color color = COLOR_RED;
-    SDL_SetRenderDrawColor(m_gameState.m_renderer, color.r, color.g, color.b, color.a);
-    SDL_RenderFillRect(m_gameState.m_renderer, &rect);
+    static const int SCALING_FACTOR = 2;
+
+    int spriteIndex = m_index * FRUIT_WIDTH * FRUIT_HEIGHT;
+    for(int rowOffset = 0; rowOffset < FRUIT_HEIGHT * SCALING_FACTOR; rowOffset += SCALING_FACTOR)
+    {
+        for(int colOffset = 0; colOffset < FRUIT_WIDTH * SCALING_FACTOR; colOffset += SCALING_FACTOR)
+        {
+            for(int rowScale = 0; rowScale < SCALING_FACTOR; rowScale++)
+                for(int colScale = 0; colScale < SCALING_FACTOR; colScale++)
+                {
+                    if(FRUIT_SPRITES[spriteIndex] == ' ')
+                    {
+                        goto nextPixel;
+                    }
+                    SDL_Color color = COLOR_MAP.at(FRUIT_SPRITES[spriteIndex]);
+                    SDL_SetRenderDrawColor(m_gameState.m_renderer, color.r, color.g, color.b, color.a);
+                    SDL_RenderDrawPoint(
+                        m_gameState.m_renderer,
+                        X_CENTER(m_col) + m_xPixelOffset + colOffset + colScale - FRUIT_WIDTH,
+                        Y_CENTER(m_row) + m_yPixelOffset + rowOffset + rowScale - FRUIT_HEIGHT);
+                }
+
+nextPixel:
+            ++spriteIndex;
+        }
+    }
 }
 
 PointsFruit::PointsFruit(GameState& gameState) : DisplayFruit(gameState, -1)
@@ -398,6 +476,12 @@ void PointsFruit::update()
 
     if(m_available)
     {
+        const int MAX_FRUIT = (int)FRUIT_SPRITES.length() / (FRUIT_HEIGHT * FRUIT_WIDTH);
+        m_index = m_gameState.m_level - 1;
+        if(m_index >= MAX_FRUIT)
+        {
+            m_index = MAX_FRUIT;
+        }
         DisplayFruit::update();
     }
 }

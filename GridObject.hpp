@@ -151,6 +151,9 @@ public:
     virtual void update() override;
     virtual void reset() override {};
 
+protected:
+    int m_index;
+
 private:
     static inline const int FRUIT_DISPLAY_ROW = 31;
     static inline const int FRUIT_DISPLAY_START_COL = 27;

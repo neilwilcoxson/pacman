@@ -93,7 +93,7 @@ const BoardLayout BASE_LAYOUT =
     " x.xxxxxxxxxx.xx.xxxxxxxxxx.x ",
     " x..........................x ",
     " xxxxxxxxxxxxxxxxxxxxxxxxxxxx ",
-    "                               "
+    "                              "
 };
 // clang-format on
 
@@ -110,6 +110,8 @@ const SDL_Color COLOR_WHITE = {0xff, 0xff, 0xff, 0xff};
 const SDL_Color COLOR_PINK = {0xff, 0xb6, 0xc1, 0xff};
 const SDL_Color COLOR_TURQUOISE = {0x30, 0xd5, 0xc8, 0xff};
 const SDL_Color COLOR_ORANGE = {0xff, 0x8c, 0x00, 0xff};
+const SDL_Color COLOR_BROWN = {0xa0, 0x52, 0x2d, 0xff};
+const SDL_Color COLOR_TAN = {0xd2, 0xb4, 0x8c, 0xff};
 
 enum class Direction
 {
