@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <SDL.h>
 
 #include "util.hpp"
@@ -148,9 +149,7 @@ private:
     const int m_index;
 
     SDL_Color m_color;
-
     int m_flashColorIndex = 0;
-    IntervalDeadlineTimer m_flashColorTimer {1000, true, [this]() { m_flashColorIndex = 1 - m_flashColorIndex; }};
 };
 
 class Blinky : public Ghost
@@ -217,14 +216,6 @@ private:
     static inline const int FRUIT_SPAWN_COL = 14;
     static inline const int FRUIT_DURATION_TICKS = 8000;
 
-    // clang-format off
     bool m_available = false;
-    IntervalDeadlineTimer m_availabilityTimer {
-        FRUIT_DURATION_TICKS,
-        false,
-        [this]() {
-            m_available = false;
-        }
-    };
-    // clang-format on
+    size_t m_availabilityTimerKey;
 };

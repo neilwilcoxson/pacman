@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <optional>
 #include <string>
 #include <vector>
@@ -35,50 +36,12 @@ private:
     bool m_readyDisplayed = true;
     bool m_activePlay = false;
 
-    // clang-format off
     uint64_t readyTimerLengthTicks = 3000;
-    IntervalDeadlineTimer m_readyTimer {
-        readyTimerLengthTicks,
-        false,
-        [this]() {
-            m_readyDisplayed = false;
-            m_activePlay = true;
-            m_pacman.reset();
-        }
-    };
-
     uint64_t m_ghostSpawnIntervalTicks = 2000;
-    IntervalDeadlineTimer m_ghostSpawnTimer {
-        m_ghostSpawnIntervalTicks,
-        true,
-        [this]() {
-            LOG_INFO("Spawning ghost");
-            for (auto& ghost : m_ghosts)
-            {
-                if (ghost->m_inBox)
-                {
-                    const int GHOST_SPAWN_ROW = 11;
-                    const int GHOST_SPAWN_COL = 15;
-                    ghost->relocate(GHOST_SPAWN_ROW, GHOST_SPAWN_COL);
-                    ghost->m_inBox = false;
-                    break;
-                }
-            }
-        }
-    };
 
     static const inline int DEFAULT_FLASHING_GHOST_POINTS = 100;
     int m_flashingGhostPoints = DEFAULT_FLASHING_GHOST_POINTS;
     uint64_t m_flashingGhostDurationMs = 8000;
-    IntervalDeadlineTimer m_flashingGhostTimer {
-        m_flashingGhostDurationMs,
-        false,
-        [this]() {
-            m_flashingGhostPoints = DEFAULT_FLASHING_GHOST_POINTS;
-            for(auto& ghost : m_ghosts) ghost->m_isFlashing = false;
-        }
-    };
-    // clang-format on
 
     // general scoring parameters
     int m_normalDotPoints = 10;

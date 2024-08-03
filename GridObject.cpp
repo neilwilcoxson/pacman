@@ -1,5 +1,6 @@
 #include "GameState.hpp"
 #include "GridObject.hpp"
+#include "TimerService.hpp"
 #include "util.hpp"
 
 GridObject::GridObject(GameState& gameState, int row, int col) : m_row(row), m_col(col), m_gameState(gameState)
@@ -250,7 +251,6 @@ void Ghost::update()
     SDL_Color color = m_color;
     if(m_isFlashing)
     {
-        m_flashColorTimer.check();
         color = FLASH_COLOR[m_flashColorIndex];
     }
 
@@ -358,7 +358,23 @@ void Ghost::reset()
 void Ghost::handleSuperDot()
 {
     m_isFlashing = true;
-    m_flashColorTimer.start();
+
+    auto& timerService = TimerService::getInstance();
+
+    // TODO this timer never stops?
+    size_t flashColorTimerKey =
+        timerService.addTimer(1000, true, [this]() { m_flashColorIndex = 1 - m_flashColorIndex; });
+    timerService.startTimer(flashColorTimerKey);
+
+    size_t flashingGhostTimerKey = timerService.addTimer(
+        m_gameState.m_flashingGhostDurationMs,
+        false,
+        [this]()
+        {
+            m_gameState.m_flashingGhostPoints = m_gameState.DEFAULT_FLASHING_GHOST_POINTS;
+            m_isFlashing = false;
+        });
+    timerService.startTimer(flashingGhostTimerKey);
 }
 
 void Blinky::calculateTargetLocation()
@@ -599,8 +615,6 @@ PointsFruit::PointsFruit(GameState& gameState) : DisplayFruit(gameState, -1)
 
 void PointsFruit::update()
 {
-    m_availabilityTimer.check();
-
     if(m_available)
     {
         m_index = m_gameState.m_level - 1;
@@ -615,11 +629,13 @@ void PointsFruit::update()
 void PointsFruit::reset()
 {
     m_available = false;
-    m_availabilityTimer.stop();
+    TimerService::getInstance().stopTimer(m_availabilityTimerKey);
 }
 
 void PointsFruit::activate()
 {
     m_available = true;
-    m_availabilityTimer.start();
+    auto& timerService = TimerService::getInstance();
+    m_availabilityTimerKey = timerService.addTimer(FRUIT_DURATION_TICKS, false, [this]() { m_available = false; });
+    timerService.startTimer(m_availabilityTimerKey);
 }

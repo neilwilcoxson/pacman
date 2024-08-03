@@ -2,13 +2,46 @@
 
 #include "GameState.hpp"
 #include "font.hpp"
+#include "TimerService.hpp"
 #include "util.hpp"
 
 GameState::GameState(SDL_Renderer* renderer) : m_renderer(renderer)
 {
     LOG_INFO("Constructing GameState");
-    m_ghostSpawnTimer.start();
-    m_readyTimer.start();
+
+    auto& timerService = TimerService::getInstance();
+
+    // TODO move to each individual ghost for different logic
+    size_t ghostSpawnTimerKey = timerService.addTimer(
+        m_ghostSpawnIntervalTicks,
+        true,
+        [this]()
+        {
+            LOG_INFO("Spawning ghost");
+            for(auto& ghost : m_ghosts)
+            {
+                if(ghost->m_inBox)
+                {
+                    const int GHOST_SPAWN_ROW = 11;
+                    const int GHOST_SPAWN_COL = 15;
+                    ghost->relocate(GHOST_SPAWN_ROW, GHOST_SPAWN_COL);
+                    ghost->m_inBox = false;
+                    break;
+                }
+            }
+        });
+    timerService.startTimer(ghostSpawnTimerKey);
+
+    size_t readyTimerKey = timerService.addTimer(
+        readyTimerLengthTicks,
+        false,
+        [this]()
+        {
+            m_readyDisplayed = false;
+            m_activePlay = true;
+            m_pacman.reset();
+        });
+    timerService.startTimer(readyTimerKey);
 }
 
 void GameState::update()
@@ -75,9 +108,7 @@ void GameState::update()
         }
     }
 
-    m_ghostSpawnTimer.check();
-    m_flashingGhostTimer.check();
-    m_readyTimer.check();
+    TimerService::getInstance().checkTimers();
 
     if(m_readyDisplayed)
     {
@@ -180,7 +211,6 @@ void GameState::handlePacmanArrival()
         for(auto& ghost : m_ghosts)
         {
             ghost->handleSuperDot();
-            m_flashingGhostTimer.start();
         }
         break;
     case WRAP:
