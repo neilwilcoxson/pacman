@@ -121,6 +121,7 @@ protected:
     void handleArrival() override;
     void handleWall() override;
     virtual void calculateTargetLocation() = 0;
+    virtual bool shouldLeaveBox() = 0;
 
 public:
     bool m_inBox = true;
@@ -142,6 +143,8 @@ private:
     static inline const int NUM_GHOSTS = 4;
     static inline const int GHOST_START_ROW = 15;
     static inline const int GHOST_START_COL = 13;
+    static inline const int GHOST_SPAWN_ROW = 11;
+    static inline const int GHOST_SPAWN_COL = 15;
     static inline const Direction GHOST_START_DIRECTION = Direction::LEFT;
     static inline const SDL_Color FLASH_COLOR[2] = {COLOR_WHITE, COLOR_BLUE};
 
@@ -156,24 +159,28 @@ class Blinky : public Ghost
 {
     using Ghost::Ghost;
     void calculateTargetLocation() override;
+    bool shouldLeaveBox() override;
 };
 
 class Pinky : public Ghost
 {
     using Ghost::Ghost;
     void calculateTargetLocation() override;
+    bool shouldLeaveBox() override;
 };
 
 class Inky : public Ghost
 {
     using Ghost::Ghost;
     void calculateTargetLocation() override;
+    bool shouldLeaveBox() override;
 };
 
 class Clyde : public Ghost
 {
     using Ghost::Ghost;
     void calculateTargetLocation() override;
+    bool shouldLeaveBox() override;
 };
 
 class DisplayFruit : public GridObject

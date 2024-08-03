@@ -11,27 +11,6 @@ GameState::GameState(SDL_Renderer* renderer) : m_renderer(renderer)
 
     auto& timerService = TimerService::getInstance();
 
-    // TODO move to each individual ghost for different logic
-    size_t ghostSpawnTimerKey = timerService.addTimer(
-        m_ghostSpawnIntervalTicks,
-        true,
-        [this]()
-        {
-            LOG_INFO("Spawning ghost");
-            for(auto& ghost : m_ghosts)
-            {
-                if(ghost->m_inBox)
-                {
-                    const int GHOST_SPAWN_ROW = 11;
-                    const int GHOST_SPAWN_COL = 15;
-                    ghost->relocate(GHOST_SPAWN_ROW, GHOST_SPAWN_COL);
-                    ghost->m_inBox = false;
-                    break;
-                }
-            }
-        });
-    timerService.startTimer(ghostSpawnTimerKey);
-
     size_t readyTimerKey = timerService.addTimer(
         readyTimerLengthTicks,
         false,

@@ -248,6 +248,12 @@ void Ghost::update()
 {
     handleMovement();
 
+    if(m_inBox && shouldLeaveBox())
+    {
+        relocate(GHOST_SPAWN_ROW, GHOST_SPAWN_COL);
+        m_inBox = false;
+    }
+
     SDL_Color color = m_color;
     if(m_isFlashing)
     {
@@ -392,9 +398,13 @@ void Blinky::calculateTargetLocation()
     m_targetLocation = m_gameState.m_pacman.getPosition();
 }
 
+bool Blinky::shouldLeaveBox()
+{
+    return true;
+}
+
 void Pinky::calculateTargetLocation()
 {
-    // TODO when to leave the box logic: leave immediately
     m_defaultTargetLocation = {0, 30};
     // try to move two tiles ahead of pacman
     auto pacmanLocation = m_gameState.m_pacman.getPosition();
@@ -403,9 +413,13 @@ void Pinky::calculateTargetLocation()
     m_targetLocation.col = pacmanLocation.col + 4 * X_INCREMENT[(size_t)pacmanDirection];
 }
 
+bool Pinky::shouldLeaveBox()
+{
+    return true;
+}
+
 void Inky::calculateTargetLocation()
 {
-    // TODO when to leave the box logic: 30 dots
     m_defaultTargetLocation = {32, 0};
     auto pacmanLocation = m_gameState.m_pacman.getPosition();
     auto redLocation = m_gameState.m_ghosts[0]->getPosition();
@@ -413,9 +427,13 @@ void Inky::calculateTargetLocation()
     m_targetLocation.col = 3 * redLocation.col - 2 * pacmanLocation.col;
 }
 
+bool Inky::shouldLeaveBox()
+{
+    return m_gameState.m_dotsEaten > 30;
+}
+
 void Clyde::calculateTargetLocation()
 {
-    // TODO when to leave the box logic: 1/3 dots eaten
     m_defaultTargetLocation = {32, 32};
     auto pacmanLocation = m_gameState.m_pacman.getPosition();
     int distance = abs(pacmanLocation.row - m_row) + abs(pacmanLocation.col - m_col);
@@ -427,6 +445,11 @@ void Clyde::calculateTargetLocation()
     {
         m_targetLocation = m_defaultTargetLocation;
     }
+}
+
+bool Clyde::shouldLeaveBox()
+{
+    return m_gameState.m_dotsEaten >= 2 * m_gameState.m_dotsRemaining;
 }
 
 static const std::string FRUIT_SPRITES =

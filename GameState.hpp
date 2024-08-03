@@ -37,7 +37,6 @@ private:
     bool m_activePlay = false;
 
     uint64_t readyTimerLengthTicks = 3000;
-    uint64_t m_ghostSpawnIntervalTicks = 2000;
 
     static const inline int DEFAULT_FLASHING_GHOST_POINTS = 100;
     int m_flashingGhostPoints = DEFAULT_FLASHING_GHOST_POINTS;
