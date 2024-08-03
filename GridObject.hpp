@@ -46,13 +46,17 @@ public:
     Mover(Mover&&) = default;
     Mover(GameState& gameState, int startRow, int startCol, Direction startFacing);
     void changeDirection(Direction newDirection);
+    Direction getDirection() const
+    {
+        return m_facingDirection;
+    }
 
 protected:
     virtual void handleArrival() {};
     virtual void handleWall() = 0;
     virtual void handleMovement();
     bool directionValid(const Direction newDirection) const;
-    bool directionIsCloser(const Direction newDirection, const Mover& otherMover) const;
+    bool directionIsCloser(const Direction newDirection, const GridPosition& otherPosition) const;
 
 protected:
     Direction m_facingDirection = Direction::LEFT;
@@ -96,7 +100,7 @@ private:
 class Ghost : public Mover
 {
 public:
-    static std::vector<Ghost> makeGhosts(GameState& gameState);
+    static std::vector<std::unique_ptr<Ghost>> makeGhosts(GameState& gameState);
 
     Ghost() = delete;
     Ghost(Ghost&) = delete;
@@ -115,10 +119,23 @@ public:
 protected:
     void handleArrival() override;
     void handleWall() override;
+    virtual void calculateTargetLocation() = 0;
 
 public:
     bool m_inBox = true;
     bool m_isFlashing = false;
+
+protected:
+    enum class Mode
+    {
+        CHASE,
+        SCATTER,
+        FRIGHTENED
+    };
+
+    Mode m_mode;
+    GridPosition m_targetLocation;
+    GridPosition m_defaultTargetLocation;
 
 private:
     static inline const int NUM_GHOSTS = 4;
@@ -134,9 +151,30 @@ private:
 
     int m_flashColorIndex = 0;
     IntervalDeadlineTimer m_flashColorTimer {1000, true, [this]() { m_flashColorIndex = 1 - m_flashColorIndex; }};
+};
 
-    int m_awayFromPacmanDirectionInterval = 10;
-    int m_numMovesTowardPacman = 0;
+class Blinky : public Ghost
+{
+    using Ghost::Ghost;
+    void calculateTargetLocation() override;
+};
+
+class Pinky : public Ghost
+{
+    using Ghost::Ghost;
+    void calculateTargetLocation() override;
+};
+
+class Inky : public Ghost
+{
+    using Ghost::Ghost;
+    void calculateTargetLocation() override;
+};
+
+class Clyde : public Ghost
+{
+    using Ghost::Ghost;
+    void calculateTargetLocation() override;
 };
 
 class DisplayFruit : public GridObject

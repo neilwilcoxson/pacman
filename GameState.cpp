@@ -53,13 +53,13 @@ void GameState::update()
 
     for(auto& ghost : m_ghosts)
     {
-        if(m_pacman.hasSamePositionAs(ghost))
+        if(ghost->hasSamePositionAs(m_pacman))
         {
-            if(ghost.m_isFlashing)
+            if(ghost->m_isFlashing)
             {
                 m_score += m_flashingGhostPoints;
                 m_flashingGhostPoints *= 2;
-                ghost.reset();
+                ghost->reset();
             }
             else
             {
@@ -69,7 +69,7 @@ void GameState::update()
                 m_pacman.reset();
                 for(auto& ghost : m_ghosts)
                 {
-                    ghost.reset();
+                    ghost->reset();
                 }
             }
         }
@@ -107,7 +107,7 @@ void GameState::update()
 
     for(auto& ghost : m_ghosts)
     {
-        ghost.update();
+        ghost->update();
     }
 
 finishRender:
@@ -179,7 +179,7 @@ void GameState::handlePacmanArrival()
         pacmansTile = ' ';
         for(auto& ghost : m_ghosts)
         {
-            ghost.handleSuperDot();
+            ghost->handleSuperDot();
             m_flashingGhostTimer.start();
         }
         break;

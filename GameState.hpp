@@ -28,7 +28,7 @@ private:
 private:
     BoardLayout m_board = BASE_LAYOUT;
     Pacman m_pacman {*this};
-    std::vector<Ghost> m_ghosts {Ghost::makeGhosts(*this)};
+    std::vector<std::unique_ptr<Ghost>> m_ghosts {Ghost::makeGhosts(*this)};
     PointsFruit m_fruit {*this};
     std::vector<DisplayFruit> m_displayFruits {DisplayFruit::makeDisplayFruits(*this)};
 
@@ -55,12 +55,12 @@ private:
             LOG_INFO("Spawning ghost");
             for (auto& ghost : m_ghosts)
             {
-                if (ghost.m_inBox)
+                if (ghost->m_inBox)
                 {
                     const int GHOST_SPAWN_ROW = 11;
                     const int GHOST_SPAWN_COL = 15;
-                    ghost.relocate(GHOST_SPAWN_ROW, GHOST_SPAWN_COL);
-                    ghost.m_inBox = false;
+                    ghost->relocate(GHOST_SPAWN_ROW, GHOST_SPAWN_COL);
+                    ghost->m_inBox = false;
                     break;
                 }
             }
@@ -75,7 +75,7 @@ private:
         false,
         [this]() {
             m_flashingGhostPoints = DEFAULT_FLASHING_GHOST_POINTS;
-            for(auto& ghost : m_ghosts) ghost.m_isFlashing = false;
+            for(auto& ghost : m_ghosts) ghost->m_isFlashing = false;
         }
     };
     // clang-format on
@@ -104,6 +104,10 @@ private:
     friend class Mover;
     friend class Pacman;
     friend class Ghost;
+    friend class Blinky;
+    friend class Pinky;
+    friend class Inky;
+    friend class Clyde;
     friend class DisplayFruit;
     friend class PointsFruit;
 };

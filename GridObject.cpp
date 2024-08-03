@@ -139,11 +139,11 @@ bool Mover::directionValid(const Direction newDirection) const
     return m_gameState.m_board[newRow][newCol] != BOUNDARY;
 }
 
-bool Mover::directionIsCloser(const Direction newDirection, const Mover& otherMover) const
+bool Mover::directionIsCloser(const Direction newDirection, const GridPosition& otherPosition) const
 {
     const size_t newDirIndex = (size_t)newDirection;
-    return abs(m_row + Y_INCREMENT[newDirIndex] - otherMover.m_row) < abs(m_row - otherMover.m_row)
-           || abs(m_col + X_INCREMENT[newDirIndex] - otherMover.m_col) < abs(m_col - otherMover.m_col);
+    return abs(m_row + Y_INCREMENT[newDirIndex] - otherPosition.row) < abs(m_row - otherPosition.row)
+           || abs(m_col + X_INCREMENT[newDirIndex] - otherPosition.col) < abs(m_col - otherPosition.col);
 }
 
 void Pacman::drawPacman(
@@ -215,15 +215,18 @@ void Pacman::reset()
     m_lastDrawnTicks = SDL_GetTicks64();
 }
 
-std::vector<Ghost> Ghost::makeGhosts(GameState& gameState)
+std::vector<std::unique_ptr<Ghost>> Ghost::makeGhosts(GameState& gameState)
 {
-    std::vector<Ghost> ghosts;
+    std::vector<std::unique_ptr<Ghost>> ghosts;
     ghosts.reserve(NUM_GHOSTS);
-    ghosts.emplace_back(gameState, GHOST_START_ROW, GHOST_START_COL + 0, GHOST_START_DIRECTION, COLOR_RED, "Blinky");
-    ghosts.emplace_back(gameState, GHOST_START_ROW, GHOST_START_COL + 1, GHOST_START_DIRECTION, COLOR_PINK, "Pinky");
-    ghosts.emplace_back(
-        gameState, GHOST_START_ROW, GHOST_START_COL + 2, GHOST_START_DIRECTION, COLOR_TURQUOISE, "Inky");
-    ghosts.emplace_back(gameState, GHOST_START_ROW, GHOST_START_COL + 3, GHOST_START_DIRECTION, COLOR_ORANGE, "Clyde");
+    ghosts.emplace_back(std::make_unique<Blinky>(
+        gameState, GHOST_START_ROW, GHOST_START_COL + 0, GHOST_START_DIRECTION, COLOR_RED, "Blinky"));
+    ghosts.emplace_back(std::make_unique<Pinky>(
+        gameState, GHOST_START_ROW, GHOST_START_COL + 1, GHOST_START_DIRECTION, COLOR_PINK, "Pinky"));
+    ghosts.emplace_back(std::make_unique<Inky>(
+        gameState, GHOST_START_ROW, GHOST_START_COL + 2, GHOST_START_DIRECTION, COLOR_TURQUOISE, "Inky"));
+    ghosts.emplace_back(std::make_unique<Clyde>(
+        gameState, GHOST_START_ROW, GHOST_START_COL + 3, GHOST_START_DIRECTION, COLOR_ORANGE, "Clyde"));
     return ghosts;
 }
 
@@ -238,7 +241,6 @@ Ghost::Ghost(
 {
     m_name = name;
     m_velocity = 100;
-    m_awayFromPacmanDirectionInterval += m_index;
 }
 
 void Ghost::update()
@@ -318,23 +320,27 @@ void Ghost::handleWall()
 
 void Ghost::handleArrival()
 {
+    switch(m_mode)
+    {
+    case Mode::CHASE:
+        calculateTargetLocation();
+        break;
+    case Mode::FRIGHTENED:
+        m_targetLocation = m_defaultTargetLocation;
+        break;
+    case Mode::SCATTER:
+        break;
+    default:
+        break;
+    }
+
     for(size_t newDirIndex = 0; newDirIndex < (size_t)Direction::MAX; newDirIndex++)
     {
         Direction newDirection = (Direction)newDirIndex;
         if(directionValid(newDirection))
         {
-            if(directionIsCloser(newDirection, m_gameState.m_pacman))
+            if(m_mode == Mode::SCATTER || directionIsCloser(newDirection, m_targetLocation))
             {
-                if(m_numMovesTowardPacman < m_awayFromPacmanDirectionInterval)
-                {
-                    m_numMovesTowardPacman++;
-                    m_pendingDirection = newDirection;
-                    return;
-                }
-            }
-            else if(m_numMovesTowardPacman >= m_awayFromPacmanDirectionInterval)
-            {
-                m_numMovesTowardPacman = 0;
                 m_pendingDirection = newDirection;
                 return;
             }
@@ -353,6 +359,58 @@ void Ghost::handleSuperDot()
 {
     m_isFlashing = true;
     m_flashColorTimer.start();
+}
+
+void Blinky::calculateTargetLocation()
+{
+    // TODO mode change
+    //
+    // Scatter for 7 seconds, then Chase for 20 seconds.
+    // Scatter for 7 seconds, then Chase for 20 seconds.
+    // Scatter for 5 seconds, then Chase for 20 seconds.
+    // Scatter for 5 seconds, then switch to Chase mode permanently.
+
+    // TODO when to leave the box logic: start outside
+    // TODO shouldn't need to set this every time
+    m_defaultTargetLocation = {0, 0};
+    m_targetLocation = m_gameState.m_pacman.getPosition();
+}
+
+void Pinky::calculateTargetLocation()
+{
+    // TODO when to leave the box logic: leave immediately
+    m_defaultTargetLocation = {0, 30};
+    // try to move two tiles ahead of pacman
+    auto pacmanLocation = m_gameState.m_pacman.getPosition();
+    auto pacmanDirection = m_gameState.m_pacman.getDirection();
+    m_targetLocation.row = pacmanLocation.row + 4 * Y_INCREMENT[(size_t)pacmanDirection];
+    m_targetLocation.col = pacmanLocation.col + 4 * X_INCREMENT[(size_t)pacmanDirection];
+}
+
+void Inky::calculateTargetLocation()
+{
+    // TODO when to leave the box logic: 30 dots
+    m_defaultTargetLocation = {32, 0};
+    auto pacmanLocation = m_gameState.m_pacman.getPosition();
+    auto redLocation = m_gameState.m_ghosts[0]->getPosition();
+    m_targetLocation.row = 3 * redLocation.row - 2 * pacmanLocation.row;
+    m_targetLocation.col = 3 * redLocation.col - 2 * pacmanLocation.col;
+}
+
+void Clyde::calculateTargetLocation()
+{
+    // TODO when to leave the box logic: 1/3 dots eaten
+    m_defaultTargetLocation = {32, 32};
+    auto pacmanLocation = m_gameState.m_pacman.getPosition();
+    int distance = abs(pacmanLocation.row - m_row) + abs(pacmanLocation.col - m_col);
+    if(distance > 8)
+    {
+        m_targetLocation = pacmanLocation;
+    }
+    else
+    {
+        m_targetLocation = m_defaultTargetLocation;
+    }
 }
 
 static const std::string FRUIT_SPRITES =
