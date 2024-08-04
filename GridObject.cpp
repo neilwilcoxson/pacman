@@ -220,14 +220,10 @@ std::vector<std::unique_ptr<Ghost>> Ghost::makeGhosts(GameState& gameState)
 {
     std::vector<std::unique_ptr<Ghost>> ghosts;
     ghosts.reserve(NUM_GHOSTS);
-    ghosts.emplace_back(std::make_unique<Blinky>(
-        gameState, GHOST_START_ROW, GHOST_START_COL + 0, GHOST_START_DIRECTION, COLOR_RED, "Blinky"));
-    ghosts.emplace_back(std::make_unique<Pinky>(
-        gameState, GHOST_START_ROW, GHOST_START_COL + 1, GHOST_START_DIRECTION, COLOR_PINK, "Pinky"));
-    ghosts.emplace_back(std::make_unique<Inky>(
-        gameState, GHOST_START_ROW, GHOST_START_COL + 2, GHOST_START_DIRECTION, COLOR_TURQUOISE, "Inky"));
-    ghosts.emplace_back(std::make_unique<Clyde>(
-        gameState, GHOST_START_ROW, GHOST_START_COL + 3, GHOST_START_DIRECTION, COLOR_ORANGE, "Clyde"));
+    ghosts.emplace_back(std::make_unique<Blinky>(gameState));
+    ghosts.emplace_back(std::make_unique<Pinky>(gameState));
+    ghosts.emplace_back(std::make_unique<Inky>(gameState));
+    ghosts.emplace_back(std::make_unique<Clyde>(gameState));
     return ghosts;
 }
 
@@ -326,26 +322,12 @@ void Ghost::handleWall()
 
 void Ghost::handleArrival()
 {
-    switch(m_mode)
-    {
-    case Mode::CHASE:
-        calculateTargetLocation();
-        break;
-    case Mode::FRIGHTENED:
-        m_targetLocation = m_defaultTargetLocation;
-        break;
-    case Mode::SCATTER:
-        break;
-    default:
-        break;
-    }
-
     for(size_t newDirIndex = 0; newDirIndex < (size_t)Direction::MAX; newDirIndex++)
     {
         Direction newDirection = (Direction)newDirIndex;
         if(directionValid(newDirection))
         {
-            if(m_mode == Mode::SCATTER || directionIsCloser(newDirection, m_targetLocation))
+            if(m_chaseMode == ChaseMode::SCATTER || directionIsCloser(newDirection, m_targetLocation))
             {
                 m_pendingDirection = newDirection;
                 return;
@@ -359,42 +341,89 @@ void Ghost::reset()
     relocate(GHOST_START_ROW, GHOST_START_COL + m_index);
     m_inBox = true;
     m_isFlashing = false;
+    resetChaseState();
 }
 
 void Ghost::handleSuperDot()
 {
-    m_isFlashing = true;
-
     auto& timerService = TimerService::getInstance();
 
-    // TODO this timer never stops?
+    timerService.pauseTimer(m_chaseStateTimerKey);
+
     size_t flashColorTimerKey =
         timerService.addTimer(1000, true, [this]() { m_flashColorIndex = 1 - m_flashColorIndex; });
     timerService.startTimer(flashColorTimerKey);
 
-    size_t flashingGhostTimerKey = timerService.addTimer(
-        m_gameState.m_flashingGhostDurationMs,
-        false,
-        [this]()
-        {
-            m_gameState.m_flashingGhostPoints = m_gameState.DEFAULT_FLASHING_GHOST_POINTS;
-            m_isFlashing = false;
-        });
-    timerService.startTimer(flashingGhostTimerKey);
+    if(!m_isFlashing)
+    {
+        // only add new timer if it doesn't already exist
+        m_flashingGhostTimerKey = timerService.addTimer(
+            m_gameState.m_flashingGhostDurationMs,
+            false,
+            [this, flashColorTimerKey]()
+            {
+                auto& timerService = TimerService::getInstance();
+                timerService.stopTimer(flashColorTimerKey);
+
+                m_gameState.m_flashingGhostPoints = m_gameState.DEFAULT_FLASHING_GHOST_POINTS;
+                m_isFlashing = false;
+                m_chaseMode = m_chaseSettings[(size_t)m_chaseState].chaseMode;
+                timerService.startTimer(m_chaseStateTimerKey);
+            });
+    }
+
+    timerService.startTimer(m_flashingGhostTimerKey);
+    m_chaseMode = ChaseMode::FRIGHTENED;
+    m_isFlashing = true;
+}
+
+void Ghost::setChaseMode(const ChaseMode chaseMode)
+{
+    m_chaseMode = chaseMode;
+    switch(m_chaseMode)
+    {
+    case ChaseMode::CHASE:
+        calculateTargetLocation();
+        break;
+    case ChaseMode::FRIGHTENED:
+        m_targetLocation = m_defaultTargetLocation;
+        break;
+    case ChaseMode::SCATTER:
+        break;
+    default:
+        break;
+    }
+}
+
+void Ghost::resetChaseState()
+{
+    TimerService::getInstance().stopTimer(m_chaseStateTimerKey);
+    m_chaseState = ChaseState::INITIAL_STATE;
+    advanceChaseState();
+}
+
+void Ghost::advanceChaseState()
+{
+    // set internal state appropriately
+    size_t chaseStateIndex = (size_t)m_chaseState + 1;
+    if(chaseStateIndex >= (size_t)ChaseState::CHASE_PERMANENT)
+    {
+        LOG_INFO("%s: Chase state is already CHASE_PERMANENT", m_name.c_str());
+        return;
+    }
+    m_chaseState = (ChaseState)chaseStateIndex;
+    LOG_INFO("%s: Set chase state to %zu", m_name.c_str(), chaseStateIndex);
+    setChaseMode(m_chaseSettings[chaseStateIndex].chaseMode);
+
+    // set timer for next state change
+    auto& timerService = TimerService::getInstance();
+    m_chaseStateTimerKey =
+        timerService.addTimer(m_chaseSettings[chaseStateIndex].durationMs, false, [this]() { advanceChaseState(); });
+    timerService.startTimer(m_chaseStateTimerKey);
 }
 
 void Blinky::calculateTargetLocation()
 {
-    // TODO mode change
-    //
-    // Scatter for 7 seconds, then Chase for 20 seconds.
-    // Scatter for 7 seconds, then Chase for 20 seconds.
-    // Scatter for 5 seconds, then Chase for 20 seconds.
-    // Scatter for 5 seconds, then switch to Chase mode permanently.
-
-    // TODO when to leave the box logic: start outside
-    // TODO shouldn't need to set this every time
-    m_defaultTargetLocation = {0, 0};
     m_targetLocation = m_gameState.m_pacman.getPosition();
 }
 
@@ -405,7 +434,6 @@ bool Blinky::shouldLeaveBox()
 
 void Pinky::calculateTargetLocation()
 {
-    m_defaultTargetLocation = {0, 30};
     // try to move two tiles ahead of pacman
     auto pacmanLocation = m_gameState.m_pacman.getPosition();
     auto pacmanDirection = m_gameState.m_pacman.getDirection();
@@ -420,7 +448,6 @@ bool Pinky::shouldLeaveBox()
 
 void Inky::calculateTargetLocation()
 {
-    m_defaultTargetLocation = {32, 0};
     auto pacmanLocation = m_gameState.m_pacman.getPosition();
     auto redLocation = m_gameState.m_ghosts[0]->getPosition();
     m_targetLocation.row = 3 * redLocation.row - 2 * pacmanLocation.row;
@@ -434,7 +461,6 @@ bool Inky::shouldLeaveBox()
 
 void Clyde::calculateTargetLocation()
 {
-    m_defaultTargetLocation = {32, 32};
     auto pacmanLocation = m_gameState.m_pacman.getPosition();
     int distance = abs(pacmanLocation.row - m_row) + abs(pacmanLocation.col - m_col);
     if(distance > 8)

@@ -10,6 +10,7 @@ public:
     static TimerService& getInstance();
     size_t addTimer(uint64_t duration, bool autoRestart, std::function<void()> callback);
     void startTimer(size_t key, uint64_t currentTicks = SDL_GetTicks64());
+    void pauseTimer(size_t key, uint64_t currentTicks = SDL_GetTicks64());
     void stopTimer(size_t key);
     void checkTimers(uint64_t currentTicks = SDL_GetTicks64());
 

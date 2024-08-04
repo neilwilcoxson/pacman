@@ -103,6 +103,13 @@ class Ghost : public Mover
 public:
     static std::vector<std::unique_ptr<Ghost>> makeGhosts(GameState& gameState);
 
+    enum class ChaseMode
+    {
+        CHASE,
+        SCATTER,
+        FRIGHTENED
+    };
+
     Ghost() = delete;
     Ghost(Ghost&) = delete;
     Ghost(Ghost&&) = default;
@@ -116,6 +123,7 @@ public:
     void update() override;
     void reset() override;
     void handleSuperDot();
+    void resetChaseState();
 
 protected:
     void handleArrival() override;
@@ -123,29 +131,27 @@ protected:
     virtual void calculateTargetLocation() = 0;
     virtual bool shouldLeaveBox() = 0;
 
+private:
+    void setChaseMode(const ChaseMode chaseMode);
+    void advanceChaseState();
+
 public:
     bool m_inBox = true;
     bool m_isFlashing = false;
 
 protected:
-    enum class Mode
-    {
-        CHASE,
-        SCATTER,
-        FRIGHTENED
-    };
+    static inline const int GHOST_START_ROW = 15;
+    static inline const int GHOST_START_COL = 13;
+    static inline const Direction GHOST_START_DIRECTION = Direction::LEFT;
 
-    Mode m_mode;
+    ChaseMode m_chaseMode = ChaseMode::SCATTER;
     GridPosition m_targetLocation;
     GridPosition m_defaultTargetLocation;
 
 private:
     static inline const int NUM_GHOSTS = 4;
-    static inline const int GHOST_START_ROW = 15;
-    static inline const int GHOST_START_COL = 13;
     static inline const int GHOST_SPAWN_ROW = 11;
     static inline const int GHOST_SPAWN_COL = 15;
-    static inline const Direction GHOST_START_DIRECTION = Direction::LEFT;
     static inline const SDL_Color FLASH_COLOR[2] = {COLOR_WHITE, COLOR_BLUE};
 
     static inline int nextIndex = 0;
@@ -153,32 +159,94 @@ private:
 
     SDL_Color m_color;
     int m_flashColorIndex = 0;
+    size_t m_flashingGhostTimerKey;
+
+    enum class ChaseState
+    {
+        INITIAL_STATE,
+        SCATTER_0, // 7 seconds
+        CHASE_0,   // 20 seconds
+        SCATTER_1, // 7 seconds
+        CHASE_1,   // 20 seconds
+        SCATTER_2, // 5 seconds
+        CHASE_2,   // 20 seconds
+        SCATTER_3, // 5 seconds
+        CHASE_PERMANENT
+    };
+
+    struct ChaseStateSettings
+    {
+        Ghost::ChaseMode chaseMode;
+        uint64_t durationMs;
+    };
+
+    std::array<ChaseStateSettings, (size_t)ChaseState::CHASE_PERMANENT + 1> m_chaseSettings {
+        {{Ghost::ChaseMode::SCATTER, 0},
+         {Ghost::ChaseMode::SCATTER, 7000},
+         {Ghost::ChaseMode::CHASE, 20000},
+         {Ghost::ChaseMode::SCATTER, 7000},
+         {Ghost::ChaseMode::CHASE, 20000},
+         {Ghost::ChaseMode::SCATTER, 5000},
+         {Ghost::ChaseMode::CHASE, 20000},
+         {Ghost::ChaseMode::SCATTER, 5000},
+         {Ghost::ChaseMode::CHASE, 0}}};
+
+    size_t m_chaseStateTimerKey;
+    ChaseState m_chaseState = ChaseState::INITIAL_STATE;
 };
 
 class Blinky : public Ghost
 {
-    using Ghost::Ghost;
+public:
+    Blinky(GameState& gameState)
+    : Ghost(gameState, GHOST_START_ROW, GHOST_START_COL + 0, GHOST_START_DIRECTION, COLOR_RED, "Blinky")
+    {
+        m_defaultTargetLocation = {0, 0};
+    }
+
+private:
     void calculateTargetLocation() override;
     bool shouldLeaveBox() override;
 };
 
 class Pinky : public Ghost
 {
-    using Ghost::Ghost;
+public:
+    Pinky(GameState& gameState)
+    : Ghost(gameState, GHOST_START_ROW, GHOST_START_COL + 1, GHOST_START_DIRECTION, COLOR_PINK, "Pinky")
+    {
+        m_defaultTargetLocation = {0, 30};
+    }
+
+private:
     void calculateTargetLocation() override;
     bool shouldLeaveBox() override;
 };
 
 class Inky : public Ghost
 {
-    using Ghost::Ghost;
+public:
+    Inky(GameState& gameState)
+    : Ghost(gameState, GHOST_START_ROW, GHOST_START_COL + 2, GHOST_START_DIRECTION, COLOR_TURQUOISE, "Inky")
+    {
+        m_defaultTargetLocation = {32, 0};
+    }
+
+private:
     void calculateTargetLocation() override;
     bool shouldLeaveBox() override;
 };
 
 class Clyde : public Ghost
 {
-    using Ghost::Ghost;
+public:
+    Clyde(GameState& gameState)
+    : Ghost(gameState, GHOST_START_ROW, GHOST_START_COL + 3, GHOST_START_DIRECTION, COLOR_ORANGE, "Clyde")
+    {
+        m_defaultTargetLocation = {32, 32};
+    }
+
+private:
     void calculateTargetLocation() override;
     bool shouldLeaveBox() override;
 };

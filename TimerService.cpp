@@ -21,6 +21,13 @@ void TimerService::startTimer(size_t key, uint64_t currentTicks)
     timer.isRunning = true;
 }
 
+void TimerService::pauseTimer(size_t key, uint64_t currentTicks)
+{
+    auto& timer = m_timers.at(key);
+    timer.duration = timer.deadline - currentTicks;
+    timer.isRunning = false;
+}
+
 void TimerService::stopTimer(size_t key)
 {
     // erase has no effect if the key does not exist

@@ -19,6 +19,10 @@ GameState::GameState(SDL_Renderer* renderer) : m_renderer(renderer)
             m_readyDisplayed = false;
             m_activePlay = true;
             m_pacman.reset();
+            for(auto& ghost : m_ghosts)
+            {
+                ghost->resetChaseState();
+            }
         });
     timerService.startTimer(readyTimerKey);
 }
