@@ -25,7 +25,7 @@ public:
 private:
     void drawScore();
     void drawFullBoard();
-    void drawBoundary(int row, int col);
+    void drawCurve(int row, int col);
 
 private:
     BoardLayout m_board = BASE_LAYOUT;

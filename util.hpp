@@ -54,45 +54,50 @@ const int X_INCREMENT[] = {0, 0, -1, 1, 0};
 const int Y_INCREMENT[] = {-1, 1, 0, 0, 0};
 
 typedef std::vector<std::string> BoardLayout;
-const char BOUNDARY = 'x';
 const char DOT = '.';
 const char SUPER_DOT = '*';
 const char WRAP = 'w';
+const char VERTICAL_WALL = '|';
+const char HORIZONTAL_WALL = '-';
+const char UL_CORNER = 'T';
+const char UR_CORNER = '7';
+const char LL_CORNER = 'L';
+const char LR_CONRER = 'J';
 
 // clang-format off
 const BoardLayout BASE_LAYOUT =
 {
     "                              ",
-    " xxxxxxxxxxxxxxxxxxxxxxxxxxxx ",
-    " x............xx............x ",
-    " x.xxxx.xxxxx.xx.xxxxx.xxxx.x ",
-    " x*x  x.x   x.xx.x   x.x  x*x ",
-    " x.xxxx.xxxxx.xx.xxxxx.xxxx.x ",
-    " x..........................x ",
-    " x.xxxx.xx.xxxxxxxx.xx.xxxx.x ",
-    " x.xxxx.xx.xxxxxxxx.xx.xxxx.x ",
-    " x......xx....xx....xx......x ",
-    " xxxxxx.xxxxx xx xxxxx.xxxxxx ",
-    "      x.xx          xx.x      ",
-    "      x.xx xxxxxxxx xx.x      ",
-    "      x.xx x      x xx.x      ",
-    " xxxxxx.xx x      x xx.xxxxxx ",
-    " w     .   x      x   .     w ",
-    " xxxxxx.xx x      x xx.xxxxxx ",
-    "      x.xx xxxxxxxx xx.x      ",
-    "      x.xx          xx.x      ",
-    " xxxxxx.xx.xxxxxxxx xx.xxxxxx ",
-    " x............xx............x ",
-    " x.xxxx.xxxxx.xx.xxxxx.xxxx.x ",
-    " x.xxxx.xxxxx.xx.xxxxx.xxxx.x ",
-    " x...xx....... ........xx...x ",
-    " xxx.xx.xx.xxxxxxxx.xx.xx.xxx ",
-    " xxx.xx.xx.xxxxxxxx.xx.xx.xxx ",
-    " x......xx....xx....xx......x ",
-    " x.xxxxxxxxxx.xx.xxxxxxxxxx.x ",
-    " x.xxxxxxxxxx.xx.xxxxxxxxxx.x ",
-    " x..........................x ",
-    " xxxxxxxxxxxxxxxxxxxxxxxxxxxx ",
+    " T--------------------------7 ",
+    " |............||............| ",
+    " |.T--7.T---7.||.T---7.T--7.| ",
+    " |*|  |.|   |.||.|   |.|  |*| ",
+    " |.L--J.L---J.LJ.L---J.L--J.| ",
+    " |..........................| ",
+    " |.T--7.T7.T------7.T7.T--7.| ",
+    " |.L--J.||.L--7T--J.||.L--J.| ",
+    " |......||....||....||......| ",
+    " L----7.|T--- LJ ---7|.T----J ",
+    "      |.||          ||.|      ",
+    "      |.|| T------7 ||.|      ",
+    "      |.|| |      | ||.|      ",
+    " -----J.LJ |      | LJ.L----- ",
+    " w     .   |      |   .     w ",
+    " -----7.T7 |      | T7.T----- ",
+    "      |.|| L------J ||.|      ",
+    "      |.||          ||.|      ",
+    " T----J.LJ.-------- LJ.L----7 ",
+    " |............T7............| ",
+    " |.T--7.T---7.||.T---7.T--7.| ",
+    " |.L-7|.L---J.LJ.L---J.|T-J.| ",
+    " |...||....... ........||...| ",
+    " |-7.||.T7.T------7.T7.||.T-| ",
+    " |-J.LJ.||.L--7T--J.||.LJ.L-| ",
+    " |......||....||....||......| ",
+    " |.T----JL--7.||.T--JL----7.| ",
+    " |.L--------J.LJ.L--------J.| ",
+    " |..........................| ",
+    " L--------------------------J ",
     "                              "
 };
 // clang-format on
@@ -128,5 +133,20 @@ const char* const DIRECTION_AS_STRING[] = {"UP", "DOWN", "LEFT", "RIGHT", "MAX"}
 #define X_CENTER(col) ((col)*TILE_WIDTH + TILE_WIDTH / 2)
 #define Y_CENTER(row) ((row)*TILE_HEIGHT + TILE_HEIGHT / 2)
 
+inline bool isBoundary(char c)
+{
+    switch(c)
+    {
+    case VERTICAL_WALL:
+    case HORIZONTAL_WALL:
+    case UL_CORNER:
+    case UR_CORNER:
+    case LL_CORNER:
+    case LR_CONRER:
+        return true;
+    default:
+        return false;
+    }
+}
 void drawFilledCircle(
     SDL_Renderer* renderer, const int xCenter, const int yCenter, const int radius, const SDL_Color& color);

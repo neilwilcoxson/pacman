@@ -65,7 +65,7 @@ void Mover::handleMovement()
     int minYOffset = -TILE_HEIGHT / 2;
     int maxYOffset = TILE_HEIGHT / 2;
 
-    if(m_gameState.m_board[nextRow][nextCol] == BOUNDARY)
+    if(isBoundary(m_gameState.m_board[nextRow][nextCol]))
     {
         // restrict movement to the center of the last tile before a boundary
         if(xIncrement == -1)
@@ -115,7 +115,7 @@ void Mover::handleMovement()
         return;
     }
 
-    if(m_gameState.m_board[nextRow][nextCol] == BOUNDARY)
+    if(isBoundary(m_gameState.m_board[nextRow][nextCol]))
     {
         m_xPixelOffset = 0;
         m_yPixelOffset = 0;
@@ -137,7 +137,7 @@ bool Mover::directionValid(const Direction newDirection) const
 {
     int newRow = m_row + Y_INCREMENT[(size_t)newDirection];
     int newCol = m_col + X_INCREMENT[(size_t)newDirection];
-    return m_gameState.m_board[newRow][newCol] != BOUNDARY;
+    return !isBoundary(m_gameState.m_board[newRow][newCol]);
 }
 
 bool Mover::directionIsCloser(const Direction newDirection, const GridPosition& otherPosition) const

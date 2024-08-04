@@ -244,8 +244,19 @@ void GameState::drawFullBoard()
                 m_dotsRemaining++;
                 drawFilledCircle(m_renderer, colCenter, rowCenter, 8, {0xff, 0xff, 0xff, SDL_ALPHA_OPAQUE});
                 break;
-            case BOUNDARY:
-                drawBoundary(row, col);
+            case VERTICAL_WALL:
+                SDL_RenderDrawLine(
+                    m_renderer, colCenter, rowCenter - TILE_HEIGHT / 2, colCenter, rowCenter + TILE_HEIGHT / 2);
+                break;
+            case HORIZONTAL_WALL:
+                SDL_RenderDrawLine(
+                    m_renderer, colCenter - TILE_WIDTH / 2, rowCenter, colCenter + TILE_WIDTH / 2, rowCenter);
+                break;
+            case UL_CORNER:
+            case UR_CORNER:
+            case LL_CORNER:
+            case LR_CONRER:
+                drawCurve(row, col);
                 break;
             default:
                 break;
@@ -254,29 +265,38 @@ void GameState::drawFullBoard()
     }
 }
 
-void GameState::drawBoundary(int row, int col)
+void GameState::drawCurve(int row, int col)
 {
-    std::vector<Direction> edges;
+    SDL_Color color = COLOR_WHITE;
+    SDL_SetRenderDrawColor(m_renderer, color.r, color.g, color.b, color.a);
 
-    for(size_t dir = 0; dir < (size_t)Direction::MAX; dir++)
+    for(int yLocalOffset = 0; yLocalOffset < TILE_HEIGHT; yLocalOffset++)
     {
-        int adjRow = row + Y_INCREMENT[dir];
-        int adjCol = col + X_INCREMENT[dir];
-        if(adjRow < 0 || adjRow >= m_board.size() || adjCol < 0 || adjCol >= m_board[adjRow].size())
+        double a = TILE_WIDTH / 2;
+        double b = TILE_HEIGHT / 2;
+        double y = yLocalOffset;
+        double x = a * sqrt(1 - (y * y) / (b * b));
+
+        switch(m_board[row][col])
         {
-            continue;
+        case UL_CORNER:
+            x = (col + 1) * TILE_WIDTH - x;
+            y = (row + 1) * TILE_HEIGHT - y;
+            break;
+        case UR_CORNER:
+            x = col * TILE_WIDTH + x;
+            y = (row + 1) * TILE_HEIGHT - y;
+            break;
+        case LL_CORNER:
+            x = (col + 1) * TILE_WIDTH - x;
+            y = row * TILE_HEIGHT + y;
+            break;
+        case LR_CONRER:
+            x = col * TILE_WIDTH + x;
+            y = row * TILE_HEIGHT + y;
+            break;
         }
 
-        if(m_board[adjRow][adjCol] == BOUNDARY)
-        {
-            edges.push_back((Direction)dir);
-        }
-    }
-
-    for(Direction dir : edges)
-    {
-        int xInc = X_INCREMENT[(size_t)dir];
-        int yInc = Y_INCREMENT[(size_t)dir];
-        SDL_RenderDrawLine(m_renderer, X_CENTER(col + xInc), Y_CENTER(row + yInc), X_CENTER(col), Y_CENTER(row));
+        SDL_RenderDrawPoint(m_renderer, x, y);
     }
 }
