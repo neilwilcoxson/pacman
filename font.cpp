@@ -352,3 +352,10 @@ void displayString(SDL_Renderer* renderer, int x, int y, const std::string& str,
         currentLeftEdgeX += (FONT_WIDTH_PIXELS + 1) * SCALING_FACTOR;
     }
 }
+
+void autoDisplayString(SDL_Renderer* renderer, const std::string& str, SDL_Color color)
+{
+    const int x = SCREEN_WIDTH / 2 - (FONT_WIDTH_PIXELS * SCALING_FACTOR * str.length() / 2);
+    const int y = 550;
+    displayString(renderer, x, y, str, color);
+}

@@ -63,7 +63,7 @@ void GameState::update()
 
     if(gameOver())
     {
-        displayString(m_renderer, 720 / 2 - (16 * 9) / 2, 550, "GAME OVER", COLOR_YELLOW);
+        autoDisplayString(m_renderer, "GAME OVER", COLOR_YELLOW);
         goto finishRender;
     }
 
@@ -95,7 +95,7 @@ void GameState::update()
 
     if(m_readyDisplayed)
     {
-        displayString(m_renderer, 720 / 2 - (16 * 5) / 2, 550, "READY", COLOR_YELLOW);
+        autoDisplayString(m_renderer, "READY", COLOR_YELLOW);
     }
 
     static const int LIFE_DISPLAY_PADDING = 10;
